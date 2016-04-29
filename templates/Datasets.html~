@@ -1,0 +1,20 @@
+{% extends "template.html" %}
+{% block content %}
+<head>
+  <meta charset="utf-8">
+  <title>Chemical In Vitro/In Vivo Profiling</title>
+  <body>
+  <div id="page-wrapper">
+                        {% if datasets  %}
+                                <h5><b>Uploaded Datesets</b></h5>
+                            {% for dataset in datasets %}
+                               <input type="radio" name="input_type" value={{ dataset }}>  <ul>{{ dataset }}</ul>				
+				</input><br>
+                            {% endfor %}
+                        {% endif %}
+			{% if not datasets  %}
+                        <h5><b>You currently have no datasets uploaded. </b></h5>
+			{% endif %}  
+ </body>
+</html>
+{% endblock %}		

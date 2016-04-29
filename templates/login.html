@@ -1,0 +1,32 @@
+{% extends "template.html" %}
+{% block content %}
+	<div class="jumbo" style="margin-left: 100px; margin-right: 100px;">
+		<h2>Welcome to CIIPRO Login</h2>
+		<br/>
+		<p>
+		If you are new to CIIPRO, click <a href="/register">here</a> to register.<br>
+		<br>
+		<b>Note:</b> Due to updates to the CIIPro website, users who registered before <b>August 5th, 2015</b> will need to re-register.<br>
+		We apologize for any inconveinence.<br>
+		<h3>Please log in:</h3>
+		</p>
+		{% if error %}
+			<p class="error"><strong>Error:</strong> {{ error }}
+		{% endif %}		
+		<form action="" method="post">
+			<input type="text" placeholder="Username" name="username" value="{{
+			request.form.username }}" required><br>
+			<br>
+			<input type="password" placeholder="Password" name="password" value="{{
+			request.form.password }}" required><br>
+			<br>
+			<input class="btn btn-default" type="submit" value="Login">
+			<br>
+		</form>
+		<br>
+		<br>
+		Forgot Username? click <a href="/usernamerecovery">here</a><br>
+		Forgot Password? click <a href="/passwordrecovery">here</a><br> 
+		
+	</div>	
+{% endblock %}		

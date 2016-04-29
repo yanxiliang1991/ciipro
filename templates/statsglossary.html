@@ -1,0 +1,112 @@
+{% extends "template.html" %}
+{% block content %}
+<div style="margin-left: 100px; margin-right: 100px;">
+
+
+    <script src="https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS_HTML"></script>
+    <!-- MathJax configuration -->
+    <script type="text/x-mathjax-config">
+    MathJax.Hub.Config({
+        tex2jax: {
+            inlineMath: [ ['$','$'], ["\\(","\\)"] ],
+            displayMath: [ ['$$','$$'], ["\\[","\\]"] ],
+            processEscapes: true,
+            processEnvironments: true
+        },
+        // Center justify equations in code and markdown cells. Elsewhere
+        // we use CSS to left justify single line equations in code cells.
+        displayAlign: 'center',
+        "HTML-CSS": {
+            styles: {'.MathJax_Display': {"margin": 0}},
+            linebreaks: { automatic: true }
+        }
+    });
+    </script>
+
+
+
+	<h2 style="color:#00008B;">Glossary of statistical metrics used on CIIPro</h2>
+<br>
+<br>
+<br>
+	
+
+<h4 style="align:left;color:#00008B;"><i><b>Number of compounds tested:</b></i> </h4> 
+<font style="text-indent: 5em; color:#00008B;">
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Number of compounds tested in the assay.
+</font>
+<br>
+<br>
+<h4 style="align:left;color:#00008B;"><i><b>Number of true positives (TP):</b></i> </h4> 
+<font style="text-indent: 5em; color:#00008B;">
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Number of true positives in the assay. 
+ A true positive is defined as a compound whose response in the bioassay is active and its <i>in vivo</i> activity is active.
+</font>
+<br>
+<br>
+<h4 style="align:left;color:#00008B;"><i><b>Number of true negatives (TN):</b></i> </h4> 
+<font style="text-indent: 5em; color:#00008B;">
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Number of true negatives in the assay.  
+A true negative is defined as a compound whose response in the bioassay is inactive and <i>in vivo</i> activity is inactive.
+</font>
+<br>
+<br>
+<h4 style="align:left;color:#00008B;"><i><b>Number of false positives (FP):</b></i> </h4> 
+<font style="text-indent: 5em; color:#00008B;">
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Number of false positives in the assay. 
+ A false positive is defined as a compound whose response in the bioassay is active and <i>in vivo</i> activity is inactive.
+</font>
+<br>
+<br>
+<h4 style="align:left;color:#00008B;"><i><b>Number of false negatives (FN):</b></i> </h4> 
+<font style="text-indent: 5em; color:#00008B;">
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Number of false negatives in the assay.  
+A false negative is defined as a compound whose response in the bioassay is inactive and <i>in vivo</i> activity is active.
+</font>
+<br>
+<br>
+<h4 style="align:left;color:#00008B;"><i><b>Sensitivity:</b></i> </h4>
+<font style="text-indent: 5em; color:#00008B;" size="4">
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;$Sensitivity = \frac{true\thinspace positives}{true\thinspace positives + false\thinspace negatives}$
+</font>
+<br>
+<br>
+<h4 style="align:left;color:#00008B;"><i><b>Specificity:</i></b></h4>
+<font style="text-indent: 5em; color:#00008B;" size="4">
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;$Specificity = \frac{true\thinspace negatives}{true\thinspace negatives + false\thinspace positives}$
+</font>
+<br>
+<br>
+<h4 style="align:left;color:#00008B;"><i><b>Correct Classifcation Rate (CCR):</i></b></h4>
+<font style="text-indent: 5em; color:#00008B;" size="4">
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;$CCR =\frac{Sensitivity + Specificity}{2}$
+</font>
+<br>
+<br>
+<h4 style="align:left;color:#00008B;"><i><b>Positive Predictive Value (PPV):</i></b></h4>
+<font style="text-indent: 5em; color:#00008B;" size="4">
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;$PPV =\frac{true\thinspace positives}{true\thinspace positives + false\thinspace positives}$
+</font>
+<br>
+<br>
+<h4 style="align:left;color:#00008B;"><i><b>Negative Predictive Value (NPV):</i></b></h4>
+<font style="text-indent: 5em; color:#00008B;" size="4">
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;$NPV =\frac{true\thinspace negatives}{true\thinspace negatives + false\thinspace negatives}$
+</font>
+<br>
+<br>
+<h4 style="align:left;color:#00008B;"><i><b>L parameter:</i></b></h4>
+<font style="text-indent: 5em; color:#00008B;" size="4">
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;$L\thinspace parameter = \frac{true\thinspace positives}{true\thinspace positives + false\thinspace negatives} \times \frac{false\thinspace positives + true\thinspace negatives}{false\thinspace positives + 1}$
+</font>
+<br>
+<br>
+<h4 style="align:left;color:#00008B;"><i><b>Coverage:</b></i></h4>
+<font style="text-indent: 5em; color:#00008B;" size="4">
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;$Coverage = \frac{Number\thinspace of\thinspace compounds\thinspace tested}{Number\thinspace of\thinspace compounds\thinspace in\thinspace dataset}$
+</font><br><br>
+	
+	
+	<br>
+</div>
+{% endblock %}		

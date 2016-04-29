@@ -1,0 +1,138 @@
+{% extends "template.html" %}
+{% block content %}
+<div name= "p1" style="margin-left: 5px; margin-right: 5px; margin-bottom: 20px">
+		{% if error %}
+			<p class="error"><strong>Error:</strong> {{ error }}
+		{% endif %}	
+    <div class="container-fluid" style="height: 100%">
+	<p style="color:#00008B;" >
+	Datasets should be uploaded in a tab delimited text file.  The file should be two columns. <br>
+       The first column should contain the chemical identifier, the second should contain chemical activity.<br>
+       The file should contain no headers.
+       <b>Please note:</b> Dataset upload may take a significant amount of time for large datasets.  
+	</p>
+        <div class="row">
+
+
+
+            <div class="col-lg-2" style="width: 40%; background-color: #E0E0E0; border: 1px solid black;">
+
+	     {% if datasets or testsets %}  
+		Avaialable datasets for <b>{{ username }}</b>:<br>
+		<div class="row">
+                {% if datasets %}
+                 <form action="/deletedataset" method="post" enctype="multipart/form-data">			
+			<div class="col-md-1" style="width: 50%; background-color: LightGray; border: 1px solid blue;">
+                      <b>Training Sets:</b><br>
+			{% for dataset in datasets %}
+                            {% if datasets.index(dataset) == 0 %}
+				<input type="radio" name="compound_filename" value="{{ dataset }}" checked="checked"> {{ dataset }}
+				</input><br>
+                            {% else %}
+				<input type="radio" name="compound_filename" value="{{ dataset }}"> {{ dataset }}
+				</input><br>
+                            {% endif %}
+			{% endfor %}
+				<input type="submit" value = "Delete" name="delete_compound_file"/>
+                                	
+		      </form>
+    	               </div>
+                {% endif %}
+                {% if not datasets %}
+			<div class="col-md-1" style="width: 50%; background-color: LightGray; border: 1px solid blue;">
+                      <b>Training Sets:</b><br>
+                        Please uplad a training set.
+    	               </div>
+                {% endif %}
+
+                {% if testsets %}
+                 <form action="/deletetestset" method="post" enctype="multipart/form-data">			
+			<div class="col-md-1" style="width: 50%; background-color: LightGray; border: 1px solid blue;">
+                      <b>Test Sets:</b><br>
+			{% for testset in testsets %}
+                            {% if testsets.index(testset) == 0 %}
+				<input type="radio" name="testset_filename" value="{{ testset }}" checked="checked"> {{ testset }}
+				</input><br>
+                            {% else %}
+				<input type="radio" name="testset_filename" value="{{ testset }}"> {{ testset }}
+				</input><br>
+                            {% endif %}
+			{% endfor %}
+				<input type="submit" value = "Delete" name="delete_testset_file"/>
+                                	
+		      </form>
+    	               </div>
+                 {% endif %}
+                {% if not testsets %}			
+			<div class="col-md-1" style="width: 50%; background-color: LightGray; border: 1px solid blue;">
+                      <b>Test Sets:</b><br>
+                        Please upload a test set.
+    	               </div>
+
+                 {% endif %}		
+		</div>
+	      {% endif %}
+
+
+	      {% if not datasets and not testsets %}    
+		<div class="row">
+			<div class="col-md-1" style="width: 100%; background-color: LightGray; border: 1px solid blue;">
+			 Avaialable datasets for <b>{{ username }}</b>:<br>
+			<br>
+			No datasets available.  Please upload to begin profiling. <br>
+			</div>
+
+
+		</div>
+	      {% endif %}
+
+<br>
+<b style="align: center">Upload Compounds</b>
+        <div class="col-md-1" style="width: 100%; background-color: #E0E0E0; border: 1px solid black;">	
+            <b>Step 1.</b> Select Input Type.
+                 <div class="row" >
+                 <form action="/uploaddataset" method="post" enctype="multipart/form-data">
+			<div class="col-md-1" style="width: 50%; background-color: LightGray; border: 1px solid blue;">
+				<input type="radio" name="input_type" value="CAS"> CAS Registry Number
+				</input><br>
+				<input type="radio" name="input_type" value="CID" checked="checked"> PubChem CID
+				</input><br> 
+				<input type="radio" name="input_type" value="name"> IUPAC Name
+				</input><br>
+				<input type="radio" name="input_type" value="smiles"> Canonical SMILES
+				</input><br>
+				<input type="radio" name="input_type" value="inchikey"> InChIKey
+				</input><br>
+			</div>
+
+                  </div>
+	<br>
+
+        	<b>Step 2.</b> Provide Compounds	
+		<div class="row equal">
+
+			<div class="col-md-2" style="width: 50%; background-color: LightGray; border: 1px solid blue;">
+				<b>Upload a file here:</b> 
+				<br>
+				<input type="file" name="compound_file"/>
+		
+			</div>
+
+
+		</div>
+		<br>
+               <b>Upoad as a Training Set or Test Set:</b><br>
+		<input type="radio" name="model_type" value="training" checked="checked"> Training Set
+        	</input>
+		<input type="radio" name="model_type" value="test"> Test Set
+        	</input><br>
+		<input type="submit" value="Upload" name="user_input"/>
+            </div>
+	</form>
+	</p>
+       </div>
+ </div>
+</div>         
+</div>
+{% endblock %}
+	
