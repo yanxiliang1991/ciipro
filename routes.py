@@ -15,7 +15,8 @@ from BioSimLib import *
 import zipfile
 
 
-UPLOAD_FOLDER = '/lustre/scratch/www/www_ciipro/live/uploads' # set upload folder
+#UPLOAD_FOLDER = '/lustre/scratch/www/www_ciipro/live/uploads' # set upload folder <--- old upload folder on lustre
+UPLOAD_FOLDER = '/g5/scratch/www/www_ciipro/live/uploads' # set upload folder <--- new upload folder on g5
 ALLOWED_EXTENSIONS = set(['txt']) # set the allowed extensions for upload
 login_manager = LoginManager() # create login manager object
 SITE_KEY = '6LdLrAITAAAAAE65drNCSsyQhNVYPuhwl6QGSgyW' # set site key for google recaptcha
@@ -34,7 +35,7 @@ login_manager.login_view = 'login'
 
 
 class User(db.Model):
-    __tablename__ = "users"
+    tablename__ = "users"
     id = db.Column('user_id', db.Integer, primary_key=True)
     username = db.Column('username', db.String(20), unique=True, index=True)
     pw_hash = db.Column('password', db.String(10))
@@ -121,8 +122,25 @@ def logout():
     """ Logs out user and returns them to the homepage.
     
     """
-    logout_user()
+    
     session.pop('compound_file', None)
+
+    # if the user is a guest, remove uploaded files upon logout
+    if str(g.user.username) == 'Guest':
+        directory = UPLOAD_FOLDER + '/' + 'Guest' + '/'
+        folders = ['compounds', 'biosims', 'profiles', 'converter', 'test_sets', 'NNs']
+        for folder in folders:
+            # if the folder is NNs, it may contain several subfolders
+            # which all need to be deleted
+            if folder == 'NNs':
+                for sub_folder in os.listdir(directory+'/'+folder):
+                    import shutil 
+                    shutil.rmtree(directory+'/'+folder+'/'+sub_folder)
+            else:
+                for filename in os.listdir(directory+'/'+folder):
+                    os.remove(directory+'/'+folder+'/'+filename)
+
+    logout_user()    
     flash('Logged out successfully')
     return redirect(url_for('home'))
 
@@ -600,9 +618,11 @@ def CIIPPredict():
             session['nns'] = int(nns)
             session['test_set'] = compound_filename.replace('_CIIPro.txt', '')
             session['cur_biosim_dir'] = USER_BIOSIMS_FOLDER + '/' +  profile_filename.replace('_BioProfile.txt', '')
+            session['max_conf'] = len(bioprofile.columns)            
             return render_template('CIIPPredictor.html', cids=cids,
                                preds=preds, acts=acts, len_cids=len_cids, profiles=profiles, testsets=testsets, 
                                NN_bool=NN_bool)  
+
 
 
 @app.route('/similarity<cid>', methods=['GET', 'POST'])
@@ -613,13 +633,14 @@ def similarity(cid):
     USER_NN_FOLDER = USER_FOLDER + '/NNs'
     
     df = nn_to_pandas(USER_NN_FOLDER + '/' + session['test_set'] + '/' + str(cid) + '.csv')
-    sim_graph = createSimilarityGraph(int(cid), df,  int(session['nns']))
+    #sim_graph = createSimilarityGraph(int(cid), df,  int(session['nns']))
+    sim_graph_pic = sim_graph(int(cid), df, int(session['nns']), int(session['max_conf']))
     #cids = session['cids']
     #preds = session['preds']
     #acts = session['acts']
     #len_cids = len(cids)
        
-    return render_template('similarity.html', sim_graph=sim_graph)
+    return render_template('similarity.html', sim_graph=sim_graph_pic)
 
 
 @app.route('/CIIProTools', methods=['GET', 'POST']) 

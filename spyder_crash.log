@@ -1,0 +1,12 @@
+Traceback (most recent call last):
+  File "/g1/software/python/install/Anaconda3-2.1.0__Python_3.4/lib/python3.4/site-packages/spyderlib/spyder.py", line 2331, in main
+    mainwindow = run_spyder(app, options, args)
+  File "/g1/software/python/install/Anaconda3-2.1.0__Python_3.4/lib/python3.4/site-packages/spyderlib/spyder.py", line 2215, in run_spyder
+    main.setup()
+  File "/g1/software/python/install/Anaconda3-2.1.0__Python_3.4/lib/python3.4/site-packages/spyderlib/spyder.py", line 745, in setup
+    self.workingdirectory = WorkingDirectory(self, self.init_workdir)
+  File "/g1/software/python/install/Anaconda3-2.1.0__Python_3.4/lib/python3.4/site-packages/spyderlib/plugins/workingdirectory.py", line 199, in __init__
+    self.chdir(workdir)
+  File "/g1/software/python/install/Anaconda3-2.1.0__Python_3.4/lib/python3.4/site-packages/spyderlib/plugins/workingdirectory.py", line 325, in chdir
+    os.chdir( to_text_string(directory) )
+PermissionError: [Errno 13] Permission denied: '/g1/home/danrusso'

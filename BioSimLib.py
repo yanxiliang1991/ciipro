@@ -974,7 +974,389 @@ def createSimilarityGraph(target, df, NNs):
     js_file.close()
     return tag
 
+def sim_graph(target, NNs, nn_cutoff, max_conf):
+    """ Returns a similarity graph for a compound.
+    
+    nn: PubChem CID of target compound
+    NNs: a nearest neighbor dictionary
+    nn_cuoff: number of nearest neighbors to confsider
+    max_conf: total number of assays in bioprofile
+    """
+    import numpy as np
+    from bokeh.plotting import figure, show, ColumnDataSource
+    from bokeh.models import FixedTicker, HoverTool, OpenURL, TapTool, NumeralTickFormatter, CategoricalAxis, FactorRange, Range1d
+    from bokeh.models import LinearAxis
+    
+    activity_color = {
+                    1:'#b30000',
+                    0:'#228B22', 
+                    0.5:'#9a9a9a'
+                    }
+    NNs = NNs.loc[:nn_cutoff-1]
+    
+    NNs['BioNN_Activity'][NNs['BioNN_Activity'] == -1] = 0
+    NNs['ChemNN_Activity'][NNs['ChemNN_Activity'] == -1] = 0
+    
+    # BioNN Circles
+    
+    #NNs['x'] = [(nn+1)/(nn_cutoff+1) for nn in range(len(NNs))]
+    #NNs['y'] = [NNs.loc[nn, 'BioSimilarity']*NNs.loc[nn, 'BioNN_Activity'] for nn in range(len(NNs))]
+    #NNs['fill_color'] = [activity_color[NNs.loc[nn, 'BioNN_Activity']] for nn in range(len(NNs))] + \
+    #NNs['line_color'] = [activity_color[NNs.loc[nn, 'BioNN_Activity']] for nn in range(len(NNs))]
+    #NNs['radius'] = [(NNs.loc[nn, 'Confidence']/max_conf)*0.05 for nn in range(len(NNs))]
+    
 
+    data_df = pd.DataFrame()
+    
+    data_df['x'] = [(nn+1)/(nn_cutoff+1) for nn in range(len(NNs))]*2 + \
+                   [-(nn+1)/(nn_cutoff+1) for nn in range(len(NNs))]
+ 
+    data_df['y'] = [NNs.loc[nn, 'BioSimilarity'] for nn in range(len(NNs))]*2 + \
+                   [NNs.loc[nn, 'Tanimoto'] for nn in range(len(NNs))]
+    
+    data_df['fill_color'] = [None for nn in range(len(NNs))] + \
+                            [activity_color[NNs.loc[nn, 'BioNN_Activity']] for nn in range(len(NNs))] + \
+                            [activity_color[NNs.loc[nn, 'ChemNN_Activity']] for nn in range(len(NNs))]
+            
+    data_df['line_color'] = ['black' for nn in range(len(NNs))] + \
+                            [activity_color[NNs.loc[nn, 'BioNN_Activity']] for nn in range(len(NNs))] + \
+                            [activity_color[NNs.loc[nn, 'ChemNN_Activity']] for nn in range(len(NNs))]
+            
+    data_df['radius'] = [0.05 for nn in range(len(NNs))] + \
+                        [(NNs.loc[nn, 'Confidence']/max_conf)*0.05 for nn in range(len(NNs))] + \
+                        [0.05 for nn in range(len(NNs))]
+            
+    data_df['alpha'] =  [1 for nn in range(len(NNs))] + \
+                        [(NNs.loc[nn, 'Confidence']/max_conf) for nn in range(len(NNs))] + \
+                        [0.5 for nn in range(len(NNs))]
+            
+    data_df['Similarity'] = [0 for nn in range(len(NNs))] + \
+                            [NNs.loc[nn, 'BioSimilarity'] for nn in range(len(NNs))] + \
+                            [NNs.loc[nn, 'Tanimoto'] for nn in range(len(NNs))]
+            
+    data_df['Confidence'] = ['N/A' for nn in range(len(NNs))] + \
+                            [NNs.loc[nn, 'Confidence'] for nn in range(len(NNs))] + \
+                            ['N/A' for nn in range(len(NNs))]
+            
+    data_df['Similarity'] = data_df['Similarity'].round(decimals=2)
+
+    data_df['CID'] = ['N/A' for nn in range(len(NNs))] + \
+                     [NNs.loc[nn, 'BioNN'] for nn in range(len(NNs))] + \
+                     [NNs.loc[nn, 'ChemNN'] for nn in range(len(NNs))]
+    
+    data_df['NN'] = [i for i in range(1, nn_cutoff+1)]*3
+    
+
+
+    
+    outer_rings  = ColumnDataSource(data_df.iloc[:nn_cutoff])
+    bio_nn  = ColumnDataSource(data_df.iloc[nn_cutoff:nn_cutoff*2])
+    chem_nn = ColumnDataSource(data_df.iloc[nn_cutoff*2:])
+    
+    nn_label = data_df.iloc[nn_cutoff:]
+    nn_label['y'] = nn_label['y']-0.06
+    nn_label['NN'] = ["NN " + str(i) for i in range(1, nn_cutoff+1)]*2
+    nn_label = ColumnDataSource(nn_label)
+    
+    f = figure(
+                x_range = (-1, 1),
+                y_range = (-0.15, 1.1),
+                height= 800,
+                width= 800, 
+                title="PubChem CID " + str(target),
+                tools = "save,tap"
+                ) 
+
+    # throw away circle for the legend
+    
+    f.circle(x=[2],
+             y=[2],
+             fill_color=activity_color[0], 
+             line_color=activity_color[0], 
+             legend='Inactive'
+            )
+    f.circle(x=[2],
+             y=[2],
+             fill_color=activity_color[0.5],
+             line_color=activity_color[0.5],
+             legend='Inconclusive'
+            )
+    f.circle(x=[2],
+             y=[2],
+             fill_color=activity_color[1], 
+             line_color=activity_color[1], 
+             legend='Active'
+            )
+    
+    f.text(
+            x=[0.5],
+            y=[1.025],
+            text=["Biological Nearest Neighbors"],
+            text_align="center"
+    )
+        
+    f.text(
+            x=[-0.5],
+            y=[1.025],
+            text=["Chemical Nearest Neighbors"],
+            text_align="center"
+    )
+
+
+    f.text(
+            x=[0],
+            y=[-0.03],
+            text=["Predicted Activity"],
+            text_align="center",
+            text_baseline="top"
+    )
+
+    f.quad(top=[1.03], 
+           bottom=[-0.03], 
+           left=[-0.05],
+           right=[0.05], 
+           fill_color=None,
+           line_color="black",
+           line_alpha=0.2,
+           line_dash=[6,4]
+    )
+    
+    f.line(x=[0, 0],
+           y=[0, 1],
+           line_color='black',
+           line_width=1,
+           line_alpha=0.2
+    )
+
+    f.line(x=[-0.05, 0.05],
+           y=[0, 0],
+           line_color='black',
+           line_width=1,
+           line_alpha=0.2,
+           
+    )
+
+    f.text(
+            x=[-0.06],
+            y=[0],
+            text=["Inactive"],
+            text_align="right",
+            text_baseline="middle",
+            text_font_size="8pt",
+            text_alpha=0.5,
+            text_color=activity_color[0]
+    )
+    f.text(
+            x=[0.06],
+            y=[0],
+            text=["Inactive"],
+            text_align="left",
+            text_baseline="middle",
+            text_font_size="8pt",
+            text_alpha=0.5,
+            text_color=activity_color[0]
+    )
+
+
+    
+    f.line(x=[-0.025, 0.025],
+           y=[0.25, 0.25],
+           line_color='black',
+           line_width=1,
+           line_alpha=0.2,
+           
+    )
+    
+    f.line(x=[-0.05, 0.05],
+           y=[0.5, 0.5],
+           line_color='black',
+           line_width=1,
+           line_alpha=0.2
+    )
+    
+    f.text(
+            x=[-0.06],
+            y=[0.5],
+            text=["Inconclusive"],
+            text_align="right",
+            text_baseline="middle",
+            text_font_size="8pt",
+            text_alpha=0.5,
+            text_color=activity_color[0.5]
+    )
+    f.text(
+            x=[0.06],
+            y=[0.5],
+            text=["Inconclusive"],
+            text_align="left",
+            text_baseline="middle",
+            text_font_size="8pt",
+            text_alpha=0.5,
+            text_color=activity_color[0.5]
+    )
+
+    f.line(x=[-0.025, 0.025],
+           y=[0.75, 0.75],
+           line_color='black',
+           line_width=1,
+           line_alpha=0.2,
+           
+    )
+    
+    f.line(x=[-0.05, 0.05],
+           y=[1, 1],
+           line_color='black',
+           line_width=1,
+           line_alpha=0.2,
+           
+    )
+
+    f.text(
+            x=[-0.06],
+            y=[1],
+            text=["Active"],
+            text_align="right",
+            text_baseline="middle",
+            text_font_size="8pt",
+            text_alpha=0.5,
+            text_color=activity_color[1]
+    )
+    f.text(
+            x=[0.06],
+            y=[1],
+            text=["Active"],
+            text_align="left",
+            text_baseline="middle",
+            text_font_size="8pt",
+            text_alpha=0.5,
+            text_color=activity_color[1]
+    )
+
+
+    
+# plot the bioNN ------------------------------------------------------------
+    
+    f.circle('x', 'y', source=outer_rings, 
+             fill_color='fill_color', 
+             line_color='line_color',
+             radius='radius',
+             alpha='alpha'
+            )
+    
+    render1 = f.circle('x', 'y', source=bio_nn, 
+             fill_color='fill_color', 
+             line_color='line_color',
+             radius='radius',
+             alpha='alpha'
+            )
+    
+    
+    
+    render2 = f.circle('x', 'y', source=chem_nn, 
+             fill_color='fill_color', 
+             line_color='line_color',
+             radius='radius',
+             alpha='alpha'
+            )
+    
+    f.text('x', 'y', source=nn_label, 
+            text='NN',
+            text_align='center',
+            text_baseline='middle',
+            )
+    
+    hover = HoverTool()
+    hover.tooltips= [
+            ("Nearest Neighbor", "@NN"),
+            ("Similarity", "@Similarity"),
+            ("Confidence", "@Confidence"),
+            ("PubChem CID", "@CID")
+        ]
+    hover.renderers= [render1, render2]
+    f.add_tools(hover)
+    
+    preds = pd.DataFrame()
+
+    preds['x'] = [0, 0]
+    preds['y'] = [NNs.loc[0:nn_cutoff, 'ChemNN_Activity'].mean(), NNs.loc[0:nn_cutoff, 'BioNN_Activity'].mean()]
+    
+    pred_color = []
+    for value in preds['y'].values:
+        if value > 0.5:
+            pred_color.append('#b30000')
+        elif value < 0.5:
+            pred_color.append('#228B22')
+        else:
+            pred_color.append('#9a9a9a')
+    
+    preds['line_color'] = pred_color
+    preds['fill_color'] = pred_color
+    preds['start_angle'] = [90, 270]
+    preds['end_angle'] = [270, 90]
+    preds['radius'] = [0.05, 0.05]
+    preds['Prediction'] = [NNs.loc[0:nn_cutoff, 'ChemNN_Activity'].mean(), NNs.loc[0:nn_cutoff, 'BioNN_Activity'].mean()]
+    preds['alpha'] = [0.5, 0.5]
+    preds = ColumnDataSource(preds)
+    
+    prediction = f.wedge(
+                x='x',
+                y='y',
+                line_color='line_color',
+                fill_color='fill_color',
+                start_angle='start_angle',
+                start_angle_units='deg',
+                end_angle='end_angle',
+                end_angle_units='deg',
+                radius='radius',
+                alpha='alpha',
+                source=preds
+    )
+
+    hover2 = HoverTool()
+    hover2.tooltips= [
+            ("Prediction", "@Prediction"),
+        ]
+    hover2.renderers= [prediction]
+    f.add_tools(hover2)
+
+    
+    
+    url = "https://pubchem.ncbi.nlm.nih.gov/compound/@CID/"
+    taptool = f.select(type=TapTool)
+    taptool.callback = OpenURL(url=url)
+    
+    f.extra_y_ranges = {"category": Range1d(start=-0.15, end=1.1)}
+    s_axis = LinearAxis(y_range_name="category")
+    s_axis.ticker=FixedTicker(ticks=[-1, -0.75, -0.5, -0.25, 0, 0.25, .5, .75, 1])
+    f.add_layout(s_axis, 'right')    
+
+    # set axis
+    
+    f.yaxis[0].ticker=FixedTicker(ticks=[-1, -0.75, -0.5, -0.25, 0, 0.25, .5, .75, 1])
+    #f.yaxis[0].formatter = NumeralTickFormatter(format="0.0%")
+    #f.yaxis.axis_label = "Similarity"
+    #f.ygrid.grid_line_alpha = 0.5
+    #f.ygrid.grid_line_dash = [6, 4]
+    f.ygrid.grid_line_color = None
+    
+    f.xaxis.minor_tick_in = 0
+    f.xaxis.minor_tick_out = 0
+    f.xaxis.major_tick_in = 0
+    f.xaxis.major_tick_out = 0
+    f.xaxis.major_label_text_color = 'None'
+    f.xgrid.grid_line_color = None
+    #f.add_layout(f.xaxis, 'right')
+
+    f.legend.orientation = "bottom_right"
+    f.legend.background_fill_color = "#cdcdcd"
+    f.legend.background_fill_alpha = 0.8
+    f.toolbar_location = "below"
+    f.logo = None
+    js, tag = autoload_static(f, CDN, 'static/js/sim.js')
+    js_file = open('/g1/var_ext/vm189_zhu/www_ciipro/live/static/js/sim.js', 'w')
+    js_file.write(js)
+    js_file.close()
+    return tag
 
 from bokeh.models import ColumnDataSource
 from bokeh.models.widgets import DataTable, TableColumn
