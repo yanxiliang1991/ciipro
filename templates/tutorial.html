@@ -150,9 +150,11 @@
      <p style="text-indent: 5em; color:#00008B; margin-left:5em; margin-right:20em;">
         To visualize the biological nearest neighbors and the <i>chemical nearest neighbors</i> (i.e. compounds in the training set structurally similar to the 
         target compound in the test set) of the predicted compounds, click on the PubChem CID for any compound in the prediction table that has an activity 
-        prediction return.  This opens up a new browser tab containing a similarity graph, a radial plot that shows biological nearest neighbors on the left 
-        and chemical nearest neighbors on the right of the target compound.  For each target compound, chemical nearest beighbors are calculated by using 
-        MACCS keys as features and the Tanimoto coefficient as the similarity metric as described in a recent publication<sup>1</sup>.  
+        prediction return.  This opens up a new browser tab containing a similarity graph, a plot that shows biological nearest neighbors on the right 
+        and chemical nearest neighbors on the left of the target compounds' predicted activity.  The y axis represents the similarity score for each compound,
+        ranging from 0-1.  Hovering over data points will display information for that compound.  The vertical bar in the center is the prediction scores 
+        from the chemical nearest neihghbors (left half) and the biological nearest neighbors (right half).  Chemical nearest neighbors are calculated by using 
+        MACCS keys as features and the Tanimoto coefficient as the similarity metric.  
 	</p>
 
 
@@ -168,10 +170,7 @@
     </center
 
 	<br>
-<p style="color:#00008B;">
-    <b><u>References</b></u><br>
-     1. Low, Y. <i>et al.</i> Integrative Chemical-Biological Read-Across Approach for Chemical Hazard Classification. <i>Chem. Res. Toxicol.</i> <b>26,</b> 1199-1208 (2013).
-</p>
+
 	<br>
 </div>
 {% endblock %}		
