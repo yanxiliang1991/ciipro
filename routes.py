@@ -479,7 +479,7 @@ def CIIProfile():
         session['cur_prof_dir'] = profile_filename.replace('profiles', 'biosims')
         if response == True:
             hp = bokehHeatmap(profile)
-            return render_template('CIIProfiler.html', hp=hp, stats=stats, 
+            return render_template('CIIProfiler.html', hp=hp, stats=stats,
                                        datasets=datasets)
         else:
             error = "Profile exceeds dimensions to make heatmap"

@@ -1,10 +1,10 @@
 {% extends "template.html" %}
 {% block content %}
-<div name= "p1" style="margin-left: 5px; margin-right: 5px; margin-bottom: 20px">
+		<div name= "p1" style="margin-left: 5px; margin-right: 5px; margin-bottom: 20px">
 		{% if error %}
 			<p class="error"><strong>Error:</strong> {{ error }}
-		{% endif %}	
-    <div class="container-fluid" style="height: 100%">
+		{% endif %}
+				<div class="container-fluid" style="height: 100%">
 
 
 <div class="col-lg-12" style="width: 100%">
@@ -61,16 +61,12 @@
 
 
                         <input type="submit" value = "Profile" name="user_input"/>	
-                </div>
+
 	        </form>
 
 	  </div>
 
 	</p>
-
-
-		</div>
-
 
      {% if hp %}  
 
@@ -84,20 +80,16 @@
 
     {% endif %}
      {% if stats %}
-<!-- <div class="col-md-1" style="width: 50%;"> -->
+	<div class="col-md-1" style="width: 50%;">
                             <p style="text-indent: 5em; color:#00008B;">
                             Data can be sorted by column by clicking column header.  Click <a href="/statsglossary" target="_blank">here</a> for a glossary of the statistical metrics calculated by CIIPro.
                             </p>
-		<div class="row" style="width: 75%">
-                    {{ stats|safe }}
-               </div>
+		<div class="row" style="width: 100%">
 
-                    
-<!-- </div> -->
+			{{ stats|safe }}
+
+		</div>
+
+	</div>
      {% endif %}
-</div>
-
- </div>
-</div>         
-</div>
 {% endblock %}

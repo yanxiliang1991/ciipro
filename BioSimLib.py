@@ -677,30 +677,88 @@ def getChemSimilarity(train_fp, test_fp):
     return tanimoto_matrix
 
 
-from bokeh.charts import HeatMap
-from bokeh.resources import CDN
-from bokeh.embed import autoload_static
-from bokeh.plotting import figure, show
-from bokeh.io import output_notebook
-from bokeh.models import HoverTool, SaveTool, ResetTool, ResizeTool
+
+
+
 def bokehHeatmap(df):
     """ Returns a javascript tag to generate a Bokeh Heatmap.
     
     df: A Pandas DataFrame object.
-    """                    
-    #palette = ['#7EB6FF', '#C0C0C0', '#00008B']
-    palette = ['#1f6093', '#FFFFFF', '#e51b23']
-    df.index = df.index.astype('str')
-    df.columns = df.columns.astype('str')
-    height = 800
-    width = 1600
-    hm = HeatMap(df, height=height, width=width, palette=palette, tools='resize,save')
-    #hm.add_tools(HoverTool(
-    #                tooltips=[
-    #                ("PubChem CID", "$y"),
-    #                ("PubChem AID", "$x")
-    #                ]    
-    #                ))
+    """
+    from bokeh.models.sources import ColumnDataSource
+    from bokeh.models import HoverTool
+    from bokeh.resources import CDN
+    from bokeh.embed import autoload_static
+    from bokeh.plotting import figure
+    import numpy as np
+    import pandas as pd
+
+    cmps = []
+    assays = []
+    xs = []
+    ys = []
+    acts = []
+    colors = []
+    toxicity = []
+
+    color_map = {1: 'red', 0: 'white', -1: 'green'}
+
+    for i, cmp in enumerate(df.index):
+        cmps = cmps + [str(cmp)] * len(df.columns)
+        assays = assays + df.columns.tolist()
+        xs = xs + list(np.arange(0.5, len(df.columns) + 0.5))
+        ys = ys + [i + 0.5] * len(df.columns)
+        acts = acts + [df.iloc[i, a] for a in range(len(df.columns))]
+        colors = colors + [color_map[df.iloc[i, a]] for a in range(len(df.columns))]
+        #toxicity = toxicity + [df.loc[df.index[i], 'Activity']] * len(df.columns)
+
+    data = pd.DataFrame(dict(
+        cmps=cmps,
+        assays=assays,
+        xs=xs,
+        ys=ys,
+        acts=acts,
+        colors=colors,
+        #toxicity=toxicity
+    ))
+
+    # data.loc[data.toxicity > 0.75, 'Activity'] = 'Toxic'
+    # data.loc[data.toxicity < 0.25, 'Activity'] = 'Not Toxic'
+    # data.loc[(data.toxicity >= 0.25) & (data.toxicity <= 0.75), 'Activity'] = 'Marginal'
+
+    d = ColumnDataSource(data)
+
+
+    height, width = df.shape
+    hover = HoverTool()
+
+    hover.tooltips = [
+        ("Compound", "@cmps"),
+        ("BioAssay", "@assays"),
+        ("BioAssay Activity", "@acts"),
+        #("Compound Toxicity", "@Activity")
+    ]
+
+    hm = figure(x_range=[0, width],
+                y_range=[0, height],
+                height=400,
+                width=400,
+                tools=[hover])
+
+    hm.rect(x='xs', y='ys',
+            height=1,
+            width=1,
+            fill_color='colors',
+            line_color='black',
+            source=d,
+            line_alpha=0.2
+            )
+
+    hm.yaxis.axis_label = 'Compounds'
+    hm.xaxis.axis_label = 'BioAssays'
+    hm.axis.major_tick_line_color = None
+    hm.axis.minor_tick_line_color = None
+    hm.axis.major_label_text_color = None
     hm.logo = None
     js, tag = autoload_static(hm, CDN, 'static/js/heatmap.js')
     js_file = open('static/js/heatmap.js', 'w')
@@ -729,6 +787,10 @@ def createSimilarityGraph(target, df, NNs):
     NNs: the number of nearest neighbors used to make predictions
     """
     # color dictionary
+    from bokeh.plotting import figure
+    from bokeh.resources import CDN
+    from bokeh.embed import autoload_static
+
     activity_color = {
                     1:'#b30000',
                     0:'#228B22', 
@@ -986,7 +1048,9 @@ def sim_graph(target, NNs, nn_cutoff, max_conf):
     from bokeh.plotting import figure, show, ColumnDataSource
     from bokeh.models import FixedTicker, HoverTool, OpenURL, TapTool, NumeralTickFormatter, CategoricalAxis, FactorRange, Range1d
     from bokeh.models import LinearAxis
-    
+    from bokeh.resources import CDN
+    from bokeh.embed import autoload_static
+
     activity_color = {
                     1:'#b30000',
                     0:'#228B22', 
@@ -1358,12 +1422,17 @@ def sim_graph(target, NNs, nn_cutoff, max_conf):
     js_file.close()
     return tag
 
-from bokeh.models import ColumnDataSource
-from bokeh.models.widgets import DataTable, TableColumn
+
 def dataTable_bokeh(stats):
     """ Returns a JavaScript tag for embedding a Bokeh DataTable on the website. 
     stats: a Pandas DataFrame conatining AID statistical information
     """
+    from bokeh.models import ColumnDataSource
+    from bokeh.models.widgets import DataTable, TableColumn
+    from bokeh.embed import autoload_static
+    from bokeh.resources import CDN
+
+
     stats.insert(0, 'PubChem AID', stats.index)
     source = ColumnDataSource(stats)
     columns = [
