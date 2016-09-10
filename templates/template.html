@@ -12,10 +12,10 @@
 		
 			<header>
 				<div class="navbar navbar">
-					{% if g.user.is_authenticated() %}
+					{% if g.user.is_authenticated %}
 			    			<a class="navbar-brand" href="/logout">Logout</a>
 			    		{% endif %}
-			    		{% if not g.user.is_authenticated() %}
+			    		{% if not g.user.is_authenticated %}
 			    			<a class="navbar-brand" href="/login">Login</a>
 			    		{% endif %}
 			    		<a class="navbar-brand" href="/">Home</a>

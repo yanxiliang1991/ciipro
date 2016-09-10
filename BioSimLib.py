@@ -677,12 +677,12 @@ def getChemSimilarity(train_fp, test_fp):
     return tanimoto_matrix
 
 
-from bokeh._legacy_charts import HeatMap
+from bokeh.charts import HeatMap
 from bokeh.resources import CDN
 from bokeh.embed import autoload_static
 from bokeh.plotting import figure, show
 from bokeh.io import output_notebook
-from bokeh.models import HoverTool, PreviewSaveTool, ResetTool, ResizeTool
+from bokeh.models import HoverTool, SaveTool, ResetTool, ResizeTool
 def bokehHeatmap(df):
     """ Returns a javascript tag to generate a Bokeh Heatmap.
     

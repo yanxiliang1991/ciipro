@@ -1,0 +1,5 @@
+# Created by .ignore support plugin (hsz.mobi)
+/.idea
+
+# ignore the config file, should be set  up by the user
+ciipro_config.py

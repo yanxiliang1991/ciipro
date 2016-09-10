@@ -1,35 +1,30 @@
 # -*- coding: utf-8 -*-
 import os
-from flask import *
-from flask.ext.login import login_user, logout_user, current_user, login_required, LoginManager
-from werkzeug import secure_filename
+from flask import Flask, render_template, flash, session, \
+    redirect, url_for, g, send_file, request
+from flask_login import login_user, logout_user, current_user, login_required, LoginManager
+from werkzeug.utils import secure_filename
 from werkzeug.security import generate_password_hash, check_password_hash
-from flask.ext.sqlalchemy import SQLAlchemy
+from flask_sqlalchemy import SQLAlchemy
 from sql import passwordRetrieval, usernameRetrieval, passwordReset
 from CIIProTools import *
-import pandas as pd
-
+from ciipro_config import CIIProConfig
 import json
-from urllib.request import urlopen
 from BioSimLib import *
+#import urllib
 import zipfile
 
 
-#UPLOAD_FOLDER = '/lustre/scratch/www/www_ciipro/live/uploads' # set upload folder <--- old upload folder on lustre
-UPLOAD_FOLDER = '/g5/scratch/www/www_ciipro/live/uploads' # set upload folder <--- new upload folder on g5
-ALLOWED_EXTENSIONS = set(['txt']) # set the allowed extensions for upload
-login_manager = LoginManager() # create login manager object
-SITE_KEY = '6LdLrAITAAAAAE65drNCSsyQhNVYPuhwl6QGSgyW' # set site key for google recaptcha
-SECRET_KEY = '6LdLrAITAAAAAHQR-8u8IczcpiqCv5FPgrrsRmyP' # set secret key for google recaptcha
-
-app = Flask(__name__) # imports Flask lib and creates new website in variable app
-app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
-app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///users.db' #location of database?
-app.secret_key = 'IfYaSmellWhatTheRockIsCooking'
-app.config['RECAPTCHA_PRIVATE_KEY'] = '6LdLrAITAAAAAHQR-8u8IczcpiqCv5FPgrrsRmyP'
+# These variables are configured in CIIProConfig
+app = Flask(__name__)
+app.config['UPLOAD_FOLDER'] = CIIProConfig.UPLOAD_FOLDER
+app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///users.db'
+app.secret_key = CIIProConfig.APP_SECRET_KEY
+app.config['RECAPTCHA_PRIVATE_KEY'] = CIIProConfig.RECAPTCHA_PRIVATE_KEY
 
 
-db = SQLAlchemy(app) #create sqlalchemy object
+db = SQLAlchemy(app)
+login_manager = LoginManager()
 login_manager.init_app(app)
 login_manager.login_view = 'login'
 
@@ -85,18 +80,13 @@ def add_header(response):
     response.headers['Cache-Control'] = 'public, max-age=0'
     return response
 
+
 @app.route('/') 
 def home():
-    """ Returns homepage template.
-    
-    """
     return render_template('home.html')
 
 @app.route('/login', methods=['GET', 'POST'])
 def login():
-    """ Returns login page if request method is 'GET', else it logs in a user
-  
-    """
     if request.method == 'GET':
         return render_template('login.html')
         
@@ -127,7 +117,7 @@ def logout():
 
     # if the user is a guest, remove uploaded files upon logout
     if str(g.user.username) == 'Guest':
-        directory = UPLOAD_FOLDER + '/' + 'Guest' + '/'
+        directory = CIIProConfig.UPLOAD_FOLDER + '/' + 'Guest' + '/'
         folders = ['compounds', 'biosims', 'profiles', 'converter', 'test_sets', 'NNs']
         for folder in folders:
             # if the folder is NNs, it may contain several subfolders
@@ -182,10 +172,10 @@ def register():
     
     user = User(request.form['username'], request.form['password'], request.form['email'])
     recaptcha = request.form['g-recaptcha-response']
-    if checkRecaptcha(recaptcha, SECRET_KEY):
+    if checkRecaptcha(recaptcha, CIIProConfig.SECRET_KEY):
         db.session.add(user)
         db.session.commit()
-        directory = UPLOAD_FOLDER + '/' + str(user.username)
+        directory = CIIProConfig.UPLOAD_FOLDER + '/' + str(user.username)
         os.makedirs(directory)
         comp_directory = directory + '/' + "compounds"
         os.makedirs(comp_directory)
@@ -311,8 +301,8 @@ def datasets():
     """ Displays datasets page with all available datasets in users compound folder. 
     
     """
-    USER_COMPOUNDS_FOLDER = UPLOAD_FOLDER + '/' + g.user.username + '/compounds'
-    USER_TEST_SETS_FOLDER = UPLOAD_FOLDER + '/' + g.user.username + '/test_sets'
+    USER_COMPOUNDS_FOLDER = CIIProConfig.UPLOAD_FOLDER + '/' + g.user.username + '/compounds'
+    USER_TEST_SETS_FOLDER = CIIProConfig.UPLOAD_FOLDER + '/' + g.user.username + '/test_sets'
     datasets = [ds for ds in os.listdir(USER_COMPOUNDS_FOLDER)]
     testsets = [ts for ts in os.listdir(USER_TEST_SETS_FOLDER)]
 
@@ -333,16 +323,16 @@ def uploaddataset():
             model_type: training or test set upload
     """
    
-    USER_COMPOUNDS_FOLDER = UPLOAD_FOLDER + '/' + g.user.username + '/compounds'
-    USER_TEST_SETS_FOLDER = UPLOAD_FOLDER + '/' + g.user.username + '/test_sets'
-    USER_NN_FOLDER = UPLOAD_FOLDER + '/' + g.user.username + '/NNs'
+    USER_COMPOUNDS_FOLDER = CIIProConfig.UPLOAD_FOLDER + '/' + g.user.username + '/compounds'
+    USER_TEST_SETS_FOLDER = CIIProConfig.UPLOAD_FOLDER + '/' + g.user.username + '/test_sets'
+    USER_NN_FOLDER = CIIProConfig.UPLOAD_FOLDER + '/' + g.user.username + '/NNs'
     
     username = g.user.username
     datasets = [ds for ds in os.listdir(USER_COMPOUNDS_FOLDER)]
     testsets = [ts for ts in os.listdir(USER_TEST_SETS_FOLDER)]
     
     # requests
-    input_type = request.form['input_type']        
+    input_type = request.form['input_type']
     file = request.files['compound_file']
     model_type = request.form['model_type']
     
@@ -378,8 +368,8 @@ def deletetestset():
         Requests:
             testset_filename (str): radiobutton from datasets page.  
     """
-    USER_TEST_SETS_FOLDER = UPLOAD_FOLDER + '/' + g.user.username + '/test_sets'
-    USER_COMPOUNDS_FOLDER = UPLOAD_FOLDER + '/' + g.user.username + '/compounds'
+    USER_TEST_SETS_FOLDER = CIIProConfig.UPLOAD_FOLDER + '/' + g.user.username + '/test_sets'
+    USER_COMPOUNDS_FOLDER = CIIProConfig.UPLOAD_FOLDER + '/' + g.user.username + '/compounds'
     username = g.user.username
     testset_filename = request.form['testset_filename']
     testset_filename = str(testset_filename)
@@ -394,8 +384,8 @@ def deletedataset():
         Requests:
             compound_filename (str): radiobutton from datasets page.  
     """
-    USER_TEST_SETS_FOLDER = UPLOAD_FOLDER + '/' + g.user.username + '/test_sets'
-    USER_COMPOUNDS_FOLDER = UPLOAD_FOLDER + '/' + g.user.username + '/compounds'
+    USER_TEST_SETS_FOLDER = CIIProConfig.UPLOAD_FOLDER + '/' + g.user.username + '/test_sets'
+    USER_COMPOUNDS_FOLDER = CIIProConfig.UPLOAD_FOLDER + '/' + g.user.username + '/compounds'
     username = g.user.username
     compound_filename = request.form['compound_filename']
     compound_filename = str(compound_filename)
@@ -413,7 +403,7 @@ def CIIProfiler():
     """ Displays CIIProfiler page with all available datasets in users compound folder.
     
     """
-    USER_COMPOUND_FOLDER = UPLOAD_FOLDER + '/' + g.user.username + '/compounds'
+    USER_COMPOUND_FOLDER = CIIProConfig.UPLOAD_FOLDER + '/' + g.user.username + '/compounds'
     datasets = []
     for dataset in os.listdir(USER_COMPOUND_FOLDER):
         datasets.append(dataset)
@@ -428,8 +418,8 @@ def CIIPPredictor():
     
     """
 
-    USER_PROFILES_FOLDER = UPLOAD_FOLDER + '/' + g.user.username + '/profiles'
-    USER_TEST_SETS_FOLDER = UPLOAD_FOLDER + '/' + g.user.username + '/test_sets'
+    USER_PROFILES_FOLDER = CIIProConfig.UPLOAD_FOLDER + '/' + g.user.username + '/profiles'
+    USER_TEST_SETS_FOLDER = CIIProConfig.UPLOAD_FOLDER + '/' + g.user.username + '/test_sets'
     profiles = [profile for profile in os.listdir(USER_PROFILES_FOLDER)]
     testsets = [testset for testset in os.listdir(USER_TEST_SETS_FOLDER)]
     return render_template('CIIPPredictor.html', profiles=profiles, 
@@ -438,7 +428,7 @@ def CIIPPredictor():
 
 
 def allowed_file(filename): #method that checks to see if upload file is allowed
-    return '.' in filename and filename.rsplit('.', 1)[1] in ALLOWED_EXTENSIONS
+    return '.' in filename and filename.rsplit('.', 1)[1] in CIIProConfig.ALLOWED_EXTENSIONS
 
 
 
@@ -456,10 +446,10 @@ def CIIProfile():
             sort_by: Column to sort in vitro, in vivo correlations by
                 
     """
-    USER_COMPOUNDS_FOLDER = UPLOAD_FOLDER + '/' + g.user.username + '/compounds'
+    USER_COMPOUNDS_FOLDER = CIIProConfig.UPLOAD_FOLDER + '/' + g.user.username + '/compounds'
 
     if request.method == 'POST':
-        USER_FOLDER = UPLOAD_FOLDER + '/' + g.user.username
+        USER_FOLDER = CIIProConfig.UPLOAD_FOLDER + '/' + g.user.username
         compound_filename = request.form['compound_filename']
         compound_filename = str(compound_filename)
         compound_file_directory = USER_FOLDER + '/compounds/' + compound_filename	
@@ -514,13 +504,13 @@ def CIIPPredict():
 
     if request.method == 'POST':
         if request.form['Submit'] == 'Delete':
-            USER_FOLDER = UPLOAD_FOLDER + '/' + g.user.username
+            USER_FOLDER = CIIProConfig.UPLOAD_FOLDER + '/' + g.user.username
             USER_PROFILES_FOLDER = USER_FOLDER +'/profiles'
             profile_filename = request.form['profile_filename']
             os.remove(USER_PROFILES_FOLDER + '/' + profile_filename)
             return redirect(url_for('CIIPPredictor'))    
         elif request.form['Submit'] == 'Submit':
-            USER_FOLDER = UPLOAD_FOLDER + '/' + g.user.username
+            USER_FOLDER = CIIProConfig.UPLOAD_FOLDER + '/' + g.user.username
             USER_PROFILES_FOLDER = USER_FOLDER +'/profiles'
             USER_COMPOUNDS_FOLDER = USER_FOLDER +'/compounds'
             USER_BIOSIMS_FOLDER =  USER_FOLDER +'/biosims'
@@ -628,7 +618,7 @@ def CIIPPredict():
 @app.route('/similarity<cid>', methods=['GET', 'POST'])
 @login_required
 def similarity(cid):
-    USER_FOLDER = UPLOAD_FOLDER + '/' + g.user.username
+    USER_FOLDER = CIIProConfig.UPLOAD_FOLDER + '/' + g.user.username
     USER_TEST_SET_FOLDER = USER_FOLDER +'/test_sets'
     USER_NN_FOLDER = USER_FOLDER + '/NNs'
     
@@ -651,7 +641,7 @@ def CIIProTools():
     
     """
 
-    USER_COMPOUND_FOLDER = UPLOAD_FOLDER + '/' + g.user.username + '/compounds'
+    USER_COMPOUND_FOLDER = CIIProConfig.UPLOAD_FOLDER + '/' + g.user.username + '/compounds'
     datasets = [dataset for dataset in os.listdir(USER_COMPOUND_FOLDER)]
     return render_template('CIIProTools.html', datasets=datasets, 
                            username=g.user.username)	
@@ -663,7 +653,7 @@ def activitycliffs():
     
     """
 
-    USER_COMPOUND_FOLDER = UPLOAD_FOLDER + '/' + g.user.username + '/compounds'
+    USER_COMPOUND_FOLDER = CIIProConfig.UPLOAD_FOLDER + '/' + g.user.username + '/compounds'
     datasets = [dataset for dataset in os.listdir(USER_COMPOUND_FOLDER)]
     compound_filename = request.form['compound_filename']
     compound_filename = str(compound_filename)
