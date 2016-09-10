@@ -703,7 +703,7 @@ def bokehHeatmap(df):
     #                ))
     hm.logo = None
     js, tag = autoload_static(hm, CDN, 'static/js/heatmap.js')
-    js_file = open('/g1/var_ext/vm189_zhu/www_ciipro/live/static/js/heatmap.js', 'w')
+    js_file = open('static/js/heatmap.js', 'w')
     js_file.write(js)
     js_file.close()
     return tag
@@ -1384,7 +1384,7 @@ def dataTable_bokeh(stats):
     data_table = DataTable(source=source, columns=columns, editable=False, height=1600, fit_columns=True, row_headers=False)
 
     js, tag = autoload_static(data_table, CDN, 'static/js/datatable.js')
-    js_file = open('/nvme0n1/ciipro/vm189_zhu/www_ciipro/live/static/js/datatable.js', 'w')
+    js_file = open('static/js/datatable.js', 'w')
     js_file.write(js)
     js_file.close()
     return tag
