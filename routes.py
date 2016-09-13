@@ -95,15 +95,15 @@ def login():
     registered_user = User.query.filter_by(username=username).first()
     
     if registered_user is None:
-        flash('Username does not exist')
+        flash('Username does not exist', 'danger')
         return redirect(url_for('login'))
        
     if registered_user.check_password(password) == False:
-        flash('Password does not match user')
+        flash('Password does not match user', 'danger')
         return redirect(url_for(''))
     
     login_user(registered_user)
-    flash('Logged in successfully')
+    flash('Logged in successfully', 'info')
     return redirect(request.args.get('next') or url_for('home'))
 
 @app.route('/logout')
@@ -191,7 +191,7 @@ def register():
         os.makedirs(NNs_directory)   
         flash('User successfully registered')
     else:
-        flash('Registration failed')
+        flash('Registration failed', 'danger')
     return redirect(url_for('login'))
 
 @app.route('/passwordrecovery', methods=['GET', 'POST']) 
@@ -242,14 +242,14 @@ def passreset():
         conf_password = request.form['conf_password']
         
         if new_password != conf_password:
-            flash('New Password and confirmation don\'t match')
+            flash('New Password and confirmation don\'t match', 'danger')
             return render_template('passreset.html')
         
         response = passwordReset(username, temp_password, new_password, User, db)
         if response == 'Password succesfully changed':
             registered_user = User.query.filter_by(username=username).first()
             login_user(registered_user)
-            flash(response)
+            flash(response, 'info')
             return render_template('home.html')
         
         return render_template('passreset.html')
@@ -466,7 +466,7 @@ def CIIProfile():
         profile_filename = USER_FOLDER + '/profiles/' + compound_filename[:-4] + '_BioProfile.txt'
         profile.to_csv(profile_filename, sep='\t')
         profile.to_csv(profile_filename.replace('profiles', 'biosims'), sep='\t')
-        response = len(profile) < 800
+
         datasets = [dataset for dataset in os.listdir(USER_COMPOUNDS_FOLDER)]
         stats_df = getIVIC(df['Activity'], profile)
 
@@ -477,13 +477,9 @@ def CIIProfile():
         writer.save()
         stats = dataTable_bokeh(stats_df)        
         session['cur_prof_dir'] = profile_filename.replace('profiles', 'biosims')
-        if response == True:
-            hp = bokehHeatmap(profile)
-            return render_template('CIIProfiler.html', hp=hp, stats=stats,
-                                       datasets=datasets)
-        else:
-            error = "Profile exceeds dimensions to make heatmap"
-            return render_template('CIIProfiler.html', error=error, stats=stats,
+        flash('Success! A profile was created consisting '
+              'of {0} compounds and {1} bioassays'.format(profile.shape[0], profile.shape[1]), 'info')
+        return render_template('CIIProfiler.html', stats=stats,
                                        datasets=datasets)
 
 

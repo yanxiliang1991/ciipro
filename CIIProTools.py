@@ -64,7 +64,7 @@ def cliffTable_bokeh(cliff):
     data_table = DataTable(source=source, columns=columns, editable=False, height=1600, fit_columns=True, row_headers=False)
 
     js, tag = autoload_static(data_table, CDN, 'static/js/clifftable.js')
-    js_file = open('/g1/var_ext/vm189_zhu/www_ciipro/live/static/js/clifftable.js', 'w')
+    js_file = open('static/js/clifftable.js', 'w')
     js_file.write(js)
     js_file.close()
     return tag
