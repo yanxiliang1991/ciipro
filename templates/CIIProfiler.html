@@ -67,26 +67,11 @@
 		{% if stats %}
 		<div class="row" >
 			<div class="col-lg">
-                <a href="/sendbioprofile">Click Here to download bioprofile and assay statistics</a><br>
-				{{ stats|safe }}
+                <a href="/sendbioprofile">Click Here to download bioprofile and assay statistics.</a><br>
+				<a href="/optimizeprofile">Click Here to optimize bioprofile.</a>
 			</div>
 		</div>
     	{% endif %}
 </div>
 
-<!--
-     {% if stats %}
-	<div class="col-md-1" style="width: 50%;">
-                            <p style="text-indent: 5em; color:#00008B;">
-                            Data can be sorted by column by clicking column header.  Click <a href="/statsglossary" target="_blank">here</a> for a glossary of the statistical metrics calculated by CIIPro.
-                            </p>
-		<div class="row" style="width: 100%">
-
-			{{ stats|safe }}
-
-		</div>
-
-	</div>
-     {% endif %}
--->
 {% endblock %}

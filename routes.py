@@ -426,6 +426,14 @@ def CIIPPredictor():
                            username=g.user.username, testsets=testsets)	
 
 
+@app.route('/optimizeprofile')
+@login_required
+def optimizeprofile():
+    """ Renderts optimize bioprofile
+    """
+    profile = session['cur_prof_dir']
+    hm = bokehHeatmap(profile)
+    return render_template('optimizeprofile.html', hm=hm)
 
 def allowed_file(filename): #method that checks to see if upload file is allowed
     return '.' in filename and filename.rsplit('.', 1)[1] in CIIProConfig.ALLOWED_EXTENSIONS

@@ -6,3 +6,6 @@ ciipro_config.py
 
 # javascript files
 /static/js/
+
+# .pyc files
+*.pyc
