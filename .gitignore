@@ -7,5 +7,7 @@ ciipro_config.py
 # javascript files
 /static/js/
 
+/__pycache__
+
 # .pyc files
 *.pyc
