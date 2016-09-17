@@ -13,7 +13,7 @@ dependencies:
 - jinja2=2.8=py35_1
 - markupsafe=0.23=py35_2
 - mkl=11.3.3=1
-- mwojcikowski::zlib=1.2.8=vc14_3
+- zlib=1.2.8=vc14_3
 - numpy=1.11.1=py35_1
 - pandas=0.18.1=np111py35_0
 - pip=8.1.2=py35_0
@@ -22,8 +22,8 @@ dependencies:
 - python-dateutil=2.5.3=py35_0
 - pytz=2016.6.1=py35_0
 - pyyaml=3.12=py35_0
-- rdkit::boost=1.59.0=py35_3
-- rdkit::rdkit=2016.03.1=np111py35_1
+- boost=1.59.0=py35_3
+- rdkit=2016.03.1=np111py35_1
 - requests=2.11.1=py35_0
 - scipy=0.18.0=np111py35_0
 - setuptools=27.2.0=py35_0
@@ -35,5 +35,5 @@ dependencies:
 - wheel=0.29.0=py35_0
 - pip:
   - flask-sqlalchemy==2.1
-prefix: C:\Users\Daniel\Anaconda3\envs\ciipro
+
 
