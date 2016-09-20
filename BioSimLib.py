@@ -686,7 +686,7 @@ def bokehHeatmap(df):
     df: A Pandas DataFrame object.
     """
     from bokeh.models.sources import ColumnDataSource
-    from bokeh.models import HoverTool
+    from bokeh.models import HoverTool, ResizeTool
     from bokeh.resources import CDN
     from bokeh.embed import autoload_static
     from bokeh.plotting import figure
@@ -741,9 +741,9 @@ def bokehHeatmap(df):
 
     hm = figure(x_range=[0, width],
                 y_range=[0, height],
-                height=400,
-                width=400,
-                tools=[hover])
+                height=800,
+                width=800,
+                tools=[hover, ResizeTool()])
 
     hm.rect(x='xs', y='ys',
             height=1,
@@ -1430,6 +1430,7 @@ def dataTable_bokeh(stats):
     from bokeh.models import ColumnDataSource
     from bokeh.models.widgets import DataTable, TableColumn
     from bokeh.embed import autoload_static
+    from bokeh.io import vform
     from bokeh.resources import CDN
 
 
@@ -1452,9 +1453,9 @@ def dataTable_bokeh(stats):
             ]
     data_table = DataTable(source=source, columns=columns,
                            editable=False, height=1600, width=800,
-                           fit_columns=True, row_headers=False)
+                           selectable='checkbox', fit_columns=True, row_headers=False)
 
-    js, tag = autoload_static(data_table, CDN, 'static/js/datatable.js')
+    js, tag = autoload_static(vform(data_table), CDN, 'static/js/datatable.js')
     js_file = open('static/js/datatable.js', 'w')
     js_file.write(js)
     js_file.close()

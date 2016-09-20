@@ -431,15 +431,27 @@ def CIIPPredictor():
 def optimizeprofile():
     """ Renderts optimize bioprofile
     """
-    profile = session['cur_prof_dir']
+    profile = bioprofile_to_pandas(session['cur_prof_dir'])
+    stats_df = pd.read_csv(session['cur_prof_dir'].replace('_BioProfile',
+                                             '_assay_stats'), sep='\t')
+    stats = dataTable_bokeh(stats_df)
     hm = bokehHeatmap(profile)
-    return render_template('optimizeprofile.html', hm=hm)
+
+
+    return render_template('optimizeprofile.html',
+                           hm=hm,
+                           stats=stats,
+                           aids=profile.columns.tolist()
+                           )
 
 def allowed_file(filename): #method that checks to see if upload file is allowed
     return '.' in filename and filename.rsplit('.', 1)[1] in CIIProConfig.ALLOWED_EXTENSIONS
 
-
-
+@app.route('/removeassays', methods=['POST'])
+@login_required
+def removeassays():
+    for each in request.form:
+        print(each)
 
 @app.route('/ciiprofile',  methods=['POST'])
 @login_required
@@ -467,13 +479,17 @@ def CIIProfile():
         
         if not noOfActives:
             noOfActives = ['5']
-        
-        
+
         df = file_to_pandas(compound_file_directory)
-        profile = makeBioprofile(df, actives_cutoff=int(noOfActives[0]))
-        profile_filename = USER_FOLDER + '/profiles/' + compound_filename[:-4] + '_BioProfile.txt'
-        profile.to_csv(profile_filename, sep='\t')
-        profile.to_csv(profile_filename.replace('profiles', 'biosims'), sep='\t')
+        session['cur_comp_dir'] = compound_file_directory
+
+        profile_filename = USER_FOLDER + '/profiles/' + compound_filename[:-4] + '_BioProfile_{0}.txt'.format(noOfActives[0])
+        if os.path.isfile(profile_filename):
+            profile = bioprofile_to_pandas(profile_filename)
+        else:
+            profile = makeBioprofile(df, actives_cutoff=int(noOfActives[0]))
+            profile.to_csv(profile_filename, sep='\t')
+            profile.to_csv(profile_filename.replace('profiles', 'biosims'), sep='\t')
 
         datasets = [dataset for dataset in os.listdir(USER_COMPOUNDS_FOLDER)]
         stats_df = getIVIC(df['Activity'], profile)
