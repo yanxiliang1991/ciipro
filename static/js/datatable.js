@@ -1,104 +1,91 @@
-document.addEventListener("DOMContentLoaded", function(event) {
-    
-    (function(global) {
-      function now() {
-        return new Date();
-      }
-    
-      var force = "";
-    
-      if (typeof (window._bokeh_onload_callbacks) === "undefined" || force !== "") {
-        window._bokeh_onload_callbacks = [];
-        window._bokeh_is_loading = undefined;
-      }
-    
-    
-      
-      
-    
-      function run_callbacks() {
-        window._bokeh_onload_callbacks.forEach(function(callback) { callback() });
-        delete window._bokeh_onload_callbacks
-        console.info("Bokeh: all callbacks have finished");
-      }
-    
-      function load_libs(js_urls, callback) {
-        window._bokeh_onload_callbacks.push(callback);
-        if (window._bokeh_is_loading > 0) {
-          console.log("Bokeh: BokehJS is being loaded, scheduling callback at", now());
-          return null;
+
+(function(global) {
+  function now() {
+    return new Date();
+  }
+
+  if (typeof (window._bokeh_onload_callbacks) === "undefined") {
+    window._bokeh_onload_callbacks = [];
+  }
+
+  function run_callbacks() {
+    window._bokeh_onload_callbacks.forEach(function(callback) { callback() });
+    delete window._bokeh_onload_callbacks
+    console.info("Bokeh: all callbacks have finished");
+  }
+
+  function load_libs(js_urls, callback) {
+    window._bokeh_onload_callbacks.push(callback);
+    if (window._bokeh_is_loading > 0) {
+      console.log("Bokeh: BokehJS is being loaded, scheduling callback at", now());
+      return null;
+    }
+    if (js_urls == null || js_urls.length === 0) {
+      run_callbacks();
+      return null;
+    }
+    console.log("Bokeh: BokehJS not loaded, scheduling load and callback at", now());
+    window._bokeh_is_loading = js_urls.length;
+    for (var i = 0; i < js_urls.length; i++) {
+      var url = js_urls[i];
+      var s = document.createElement('script');
+      s.src = url;
+      s.async = false;
+      s.onreadystatechange = s.onload = function() {
+        window._bokeh_is_loading--;
+        if (window._bokeh_is_loading === 0) {
+          console.log("Bokeh: all BokehJS libraries loaded");
+          run_callbacks()
         }
-        if (js_urls == null || js_urls.length === 0) {
-          run_callbacks();
-          return null;
-        }
-        console.log("Bokeh: BokehJS not loaded, scheduling load and callback at", now());
-        window._bokeh_is_loading = js_urls.length;
-        for (var i = 0; i < js_urls.length; i++) {
-          var url = js_urls[i];
-          var s = document.createElement('script');
-          s.src = url;
-          s.async = false;
-          s.onreadystatechange = s.onload = function() {
-            window._bokeh_is_loading--;
-            if (window._bokeh_is_loading === 0) {
-              console.log("Bokeh: all BokehJS libraries loaded");
-              run_callbacks()
-            }
-          };
-          s.onerror = function() {
-            console.warn("failed to load library " + url);
-          };
-          console.log("Bokeh: injecting script tag for BokehJS library: ", url);
-          document.getElementsByTagName("head")[0].appendChild(s);
-        }
-      };var element = document.getElementById("fdde5906-ee95-4c68-9807-275f34768f83");
-      if (element == null) {
-        console.log("Bokeh: ERROR: autoload.js configured with elementid 'fdde5906-ee95-4c68-9807-275f34768f83' but no matching script tag was found. ")
-        return false;
-      }
+      };
+      s.onerror = function() {
+        console.warn("failed to load library " + url);
+      };
+      console.log("Bokeh: injecting script tag for BokehJS library: ", url);
+      document.getElementsByTagName("head")[0].appendChild(s);
+    }
+  };var element = document.getElementById("c99a55d0-f333-4c35-bb56-acb6c4373cca");
+  if (element == null) {
+    console.log("Bokeh: ERROR: autoload.js configured with elementid 'c99a55d0-f333-4c35-bb56-acb6c4373cca' but no matching script tag was found. ")
+    return false;
+  }
+
+  var js_urls = ['https://cdn.pydata.org/bokeh/release/bokeh-0.11.1.min.js', 'https://cdn.pydata.org/bokeh/release/bokeh-widgets-0.11.1.min.js', 'https://cdn.pydata.org/bokeh/release/bokeh-compiler-0.11.1.min.js'];
+
+  var inline_js = [
+    function(Bokeh) {
+      Bokeh.set_log_level("info");
+    },
     
-      var js_urls = ['https://cdn.pydata.org/bokeh/release/bokeh-0.12.2.min.js', 'https://cdn.pydata.org/bokeh/release/bokeh-widgets-0.12.2.min.js', 'https://cdn.pydata.org/bokeh/release/bokeh-compiler-0.12.2.min.js'];
-    
-      var inline_js = [
-        function(Bokeh) {
-          Bokeh.set_log_level("info");
-        },
-        
-        function(Bokeh) {
-          Bokeh.$(function() {
-              Bokeh.safely(function() {
-                  var docs_json = {"c0400697-f2ad-4fad-9720-b1ea4db47801":{"roots":{"references":[{"attributes":{},"id":"03412081-a3e2-43c8-bbaf-559a661a826d","type":"StringFormatter"},{"attributes":{},"id":"87b7eca4-ae1c-4bca-8bf0-b450400689c3","type":"StringEditor"},{"attributes":{"editor":{"id":"5cf0d3ce-3f41-4e31-a771-7da03ac2f98e","type":"StringEditor"},"field":"FP","formatter":{"id":"b3bac9c0-5b90-48e3-a230-f1cf5053a140","type":"StringFormatter"},"title":"FP"},"id":"fd646e80-61de-49af-a376-d881cd72c263","type":"TableColumn"},{"attributes":{},"id":"57c7f6a3-0422-4277-9a87-1e363255c241","type":"StringEditor"},{"attributes":{},"id":"073c9bcd-e86b-4707-b72b-7b1b592fb8d7","type":"StringEditor"},{"attributes":{"editor":{"id":"13684dac-5869-463c-b4e4-84d33f481319","type":"StringEditor"},"field":"L parameter","formatter":{"id":"c37c0062-8668-411f-9ef1-4c84ab032f47","type":"StringFormatter"},"title":"L parameter"},"id":"b4967e19-1356-4b6a-a3e9-00c2a68ef644","type":"TableColumn"},{"attributes":{},"id":"dea9d3b9-c3e1-43d6-8333-a70972d78d36","type":"StringEditor"},{"attributes":{},"id":"f68c53f2-b130-49c6-82ac-e1a6a725e30a","type":"StringEditor"},{"attributes":{},"id":"b3bac9c0-5b90-48e3-a230-f1cf5053a140","type":"StringFormatter"},{"attributes":{},"id":"3a69d56d-e029-43aa-940f-e3ba1fe42b2c","type":"StringEditor"},{"attributes":{"editor":{"id":"f895ead0-df4c-4ec5-b47f-df24557d86d0","type":"StringEditor"},"field":"PubChem AID","formatter":{"id":"c6bedb08-60bb-49a3-b83b-add3f08bb505","type":"StringFormatter"},"title":"PubChem AID"},"id":"025000be-e770-4d50-a419-3be8afc5a816","type":"TableColumn"},{"attributes":{"editor":{"id":"8a6c56bd-6e19-4eab-b50c-974e9acaffd9","type":"StringEditor"},"field":"FN","formatter":{"id":"8b0abb12-0333-486c-873c-b8f91fdf2f67","type":"StringFormatter"},"title":"FN"},"id":"5eae5dc5-5a48-460b-be0d-de3c8f1fc44f","type":"TableColumn"},{"attributes":{},"id":"f895ead0-df4c-4ec5-b47f-df24557d86d0","type":"StringEditor"},{"attributes":{"editor":{"id":"f68c53f2-b130-49c6-82ac-e1a6a725e30a","type":"StringEditor"},"field":"CCR","formatter":{"id":"fb144a99-e82c-4744-bd98-1276df1a084b","type":"StringFormatter"},"title":"CCR"},"id":"f2cea770-3e16-42a7-a521-8898b07d34e1","type":"TableColumn"},{"attributes":{},"id":"6c3ebe07-2e16-4744-b93d-615818cfbb5c","type":"StringFormatter"},{"attributes":{},"id":"8b0abb12-0333-486c-873c-b8f91fdf2f67","type":"StringFormatter"},{"attributes":{"editor":{"id":"073c9bcd-e86b-4707-b72b-7b1b592fb8d7","type":"StringEditor"},"field":"TN","formatter":{"id":"907007e6-9087-4ad2-b976-f0119f1f9145","type":"StringFormatter"},"title":"TN"},"id":"69de2860-a0fc-40c9-90d6-f3f11c2340a4","type":"TableColumn"},{"attributes":{"editor":{"id":"35232e35-fbbf-4427-b349-5460dc8cd618","type":"StringEditor"},"field":"Specificity","formatter":{"id":"03412081-a3e2-43c8-bbaf-559a661a826d","type":"StringFormatter"},"title":"Specificity"},"id":"008db1aa-6d88-49c8-80d8-113b36b3f413","type":"TableColumn"},{"attributes":{},"id":"8a6c56bd-6e19-4eab-b50c-974e9acaffd9","type":"StringEditor"},{"attributes":{"editor":{"id":"dea9d3b9-c3e1-43d6-8333-a70972d78d36","type":"StringEditor"},"field":"Coverage","formatter":{"id":"bcd39188-1594-4336-9120-96cc126b8c93","type":"StringFormatter"},"title":"Coverage"},"id":"60bebad1-9b64-4104-9ad2-62410ce4382f","type":"TableColumn"},{"attributes":{"editor":{"id":"c5c88ab3-9c1c-4ca6-adb9-478699ae89ec","type":"StringEditor"},"field":"Compounds\nTested","formatter":{"id":"3b8e6ace-5138-42cd-ab32-0150ab0a2083","type":"StringFormatter"},"title":"Compounds\nTested"},"id":"e91a633b-c7fd-4b18-b2f8-b7ad62b26789","type":"TableColumn"},{"attributes":{},"id":"13684dac-5869-463c-b4e4-84d33f481319","type":"StringEditor"},{"attributes":{"columns":[{"id":"025000be-e770-4d50-a419-3be8afc5a816","type":"TableColumn"},{"id":"e91a633b-c7fd-4b18-b2f8-b7ad62b26789","type":"TableColumn"},{"id":"664fcab1-e72f-4f9d-a826-419719460498","type":"TableColumn"},{"id":"69de2860-a0fc-40c9-90d6-f3f11c2340a4","type":"TableColumn"},{"id":"fd646e80-61de-49af-a376-d881cd72c263","type":"TableColumn"},{"id":"5eae5dc5-5a48-460b-be0d-de3c8f1fc44f","type":"TableColumn"},{"id":"87b034e4-b074-4045-a132-49eb1b42f01c","type":"TableColumn"},{"id":"008db1aa-6d88-49c8-80d8-113b36b3f413","type":"TableColumn"},{"id":"f2cea770-3e16-42a7-a521-8898b07d34e1","type":"TableColumn"},{"id":"1b89a02d-a0b0-4004-b61c-89777e4f9902","type":"TableColumn"},{"id":"3b8a2363-1a9f-4923-9c68-f47fa8dd5746","type":"TableColumn"},{"id":"b4967e19-1356-4b6a-a3e9-00c2a68ef644","type":"TableColumn"},{"id":"60bebad1-9b64-4104-9ad2-62410ce4382f","type":"TableColumn"}],"height":1600,"row_headers":false,"source":{"id":"3d3597e4-cb4a-4db9-aaa8-85ef786224d8","type":"ColumnDataSource"}},"id":"e3011da5-a962-498e-a8b4-c81396c4b912","type":"DataTable"},{"attributes":{},"id":"bcd39188-1594-4336-9120-96cc126b8c93","type":"StringFormatter"},{"attributes":{"editor":{"id":"87b7eca4-ae1c-4bca-8bf0-b450400689c3","type":"StringEditor"},"field":"TP","formatter":{"id":"faf0b818-e525-43f2-8920-ebaf00bf30f4","type":"StringFormatter"},"title":"TP"},"id":"664fcab1-e72f-4f9d-a826-419719460498","type":"TableColumn"},{"attributes":{},"id":"c6bedb08-60bb-49a3-b83b-add3f08bb505","type":"StringFormatter"},{"attributes":{"callback":null,"column_names":["NPV","TN","CCR","Compounds\nTested","PubChem AID","PPV","L parameter","FP","Sensitivity","Coverage","TP","index","FN","Specificity"],"data":{"CCR":[0.56,0.5,0.5,0.5,0.5,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0],"Compounds\nTested":[12,4,2,2,2,3,3,3,3,3,3,3,3,3,3,3,3,2],"Coverage":[0.13,0.04,0.02,0.02,0.02,0.03,0.03,0.03,0.03,0.03,0.03,0.03,0.03,0.03,0.03,0.03,0.03,0.02],"FN":[0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0],"FP":[8,3,1,1,1,3,3,3,3,3,3,3,3,3,3,3,3,2],"L parameter":[1.0,0.75,0.5,0.5,0.5,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0],"NPV":[1.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0],"PPV":[0.27,0.25,0.5,0.5,0.5,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0],"PubChem AID":[1188,1195,2062,449756,463229,522805,522806,522807,522808,522809,522810,522811,522812,522813,522814,522815,522816,977611],"Sensitivity":[1.0,1.0,1.0,1.0,1.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0],"Specificity":[0.11,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0],"TN":[1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],"TP":[3,1,1,1,1,0,0,0,0,0,0,0,0,0,0,0,0,0],"index":[1188,1195,2062,449756,463229,522805,522806,522807,522808,522809,522810,522811,522812,522813,522814,522815,522816,977611]}},"id":"3d3597e4-cb4a-4db9-aaa8-85ef786224d8","type":"ColumnDataSource"},{"attributes":{},"id":"3af7064c-65f8-425c-953a-bda39586aeea","type":"StringFormatter"},{"attributes":{"editor":{"id":"4d1c7d61-532b-4508-8f9c-6f174b19eec7","type":"StringEditor"},"field":"PPV","formatter":{"id":"6c3ebe07-2e16-4744-b93d-615818cfbb5c","type":"StringFormatter"},"title":"PPV"},"id":"1b89a02d-a0b0-4004-b61c-89777e4f9902","type":"TableColumn"},{"attributes":{},"id":"907007e6-9087-4ad2-b976-f0119f1f9145","type":"StringFormatter"},{"attributes":{},"id":"21b65a44-9615-4661-b21a-85852ede0fa9","type":"StringFormatter"},{"attributes":{},"id":"faf0b818-e525-43f2-8920-ebaf00bf30f4","type":"StringFormatter"},{"attributes":{},"id":"3b8e6ace-5138-42cd-ab32-0150ab0a2083","type":"StringFormatter"},{"attributes":{},"id":"c37c0062-8668-411f-9ef1-4c84ab032f47","type":"StringFormatter"},{"attributes":{},"id":"5cf0d3ce-3f41-4e31-a771-7da03ac2f98e","type":"StringEditor"},{"attributes":{},"id":"35232e35-fbbf-4427-b349-5460dc8cd618","type":"StringEditor"},{"attributes":{},"id":"fb144a99-e82c-4744-bd98-1276df1a084b","type":"StringFormatter"},{"attributes":{},"id":"c5c88ab3-9c1c-4ca6-adb9-478699ae89ec","type":"StringEditor"},{"attributes":{"editor":{"id":"57c7f6a3-0422-4277-9a87-1e363255c241","type":"StringEditor"},"field":"NPV","formatter":{"id":"21b65a44-9615-4661-b21a-85852ede0fa9","type":"StringFormatter"},"title":"NPV"},"id":"3b8a2363-1a9f-4923-9c68-f47fa8dd5746","type":"TableColumn"},{"attributes":{"editor":{"id":"3a69d56d-e029-43aa-940f-e3ba1fe42b2c","type":"StringEditor"},"field":"Sensitivity","formatter":{"id":"3af7064c-65f8-425c-953a-bda39586aeea","type":"StringFormatter"},"title":"Sensitivity"},"id":"87b034e4-b074-4045-a132-49eb1b42f01c","type":"TableColumn"},{"attributes":{},"id":"4d1c7d61-532b-4508-8f9c-6f174b19eec7","type":"StringEditor"}],"root_ids":["e3011da5-a962-498e-a8b4-c81396c4b912"]},"title":"Bokeh Application","version":"0.12.2"}};
-                  var render_items = [{"docid":"c0400697-f2ad-4fad-9720-b1ea4db47801","elementid":"fdde5906-ee95-4c68-9807-275f34768f83","modelid":"e3011da5-a962-498e-a8b4-c81396c4b912"}];
-                  
-                  Bokeh.embed.embed_items(docs_json, render_items);
-              });
-          });
-        },
-        function(Bokeh) {
-          console.log("Bokeh: injecting CSS: https://cdn.pydata.org/bokeh/release/bokeh-0.12.2.min.css");
-          Bokeh.embed.inject_css("https://cdn.pydata.org/bokeh/release/bokeh-0.12.2.min.css");
-          console.log("Bokeh: injecting CSS: https://cdn.pydata.org/bokeh/release/bokeh-widgets-0.12.2.min.css");
-          Bokeh.embed.inject_css("https://cdn.pydata.org/bokeh/release/bokeh-widgets-0.12.2.min.css");
-        }
-      ];
-    
-      function run_inline_js() {
-        
-        for (var i = 0; i < inline_js.length; i++) {
-          inline_js[i](window.Bokeh);
-        }
-        
-      }
-    
-      if (window._bokeh_is_loading === 0) {
-        console.log("Bokeh: BokehJS loaded, going straight to plotting");
-        run_inline_js();
-      } else {
-        load_libs(js_urls, function() {
-          console.log("Bokeh: BokehJS plotting callback run at", now());
-          run_inline_js();
-        });
-      }
-    }(this));
-});
+    function(Bokeh) {
+      Bokeh.$(function() {
+          var docs_json = {"42d19139-be61-4dfa-831a-935dd58c1dd4":{"roots":{"references":[{"attributes":{},"id":"b2b88aab-ab33-4c8e-9724-ed5b072a2922","type":"StringEditor"},{"attributes":{"editor":{"id":"03ad9ad8-e70d-44db-a8b9-2631c8086e84","type":"StringEditor"},"field":"FP","formatter":{"id":"cb77396a-ba65-48cc-9c0c-105a081a5f0f","type":"StringFormatter"},"title":"FP"},"id":"022db3f7-0212-4be6-8ff5-712e75dd7f44","type":"TableColumn"},{"attributes":{},"id":"8f975637-e50d-4c28-9689-843069f571ae","type":"StringFormatter"},{"attributes":{},"id":"cb77396a-ba65-48cc-9c0c-105a081a5f0f","type":"StringFormatter"},{"attributes":{},"id":"eb2a61bc-9fb8-4b8e-8ac8-abbd1f7f8f47","type":"StringEditor"},{"attributes":{},"id":"a8d49d05-d2ca-4f93-aa4e-2f0fedce472e","type":"StringEditor"},{"attributes":{"editor":{"id":"19a2a41a-47f3-45f0-8da2-25e17518ac99","type":"StringEditor"},"field":"FP","formatter":{"id":"29542ff7-a9a1-4a46-9892-c0ba46e83948","type":"StringFormatter"},"title":"FP"},"id":"41d052ea-67c4-4003-9b41-c7afe25163c8","type":"TableColumn"},{"attributes":{},"id":"a3abc210-1c9a-4c72-8895-cc43621b5eac","type":"StringFormatter"},{"attributes":{},"id":"28dc71e7-f737-4121-ac1b-c9fecdc2615b","type":"StringEditor"},{"attributes":{"editor":{"id":"b30d94e4-eca9-41eb-bda7-61cf23eb128e","type":"StringEditor"},"field":"Compounds\nTested","formatter":{"id":"6e2454c6-6ab2-4ea3-8256-539a4c2f0bdd","type":"StringFormatter"},"title":"Compounds\nTested"},"id":"15573324-42f4-4ba3-abc4-c93266566c91","type":"TableColumn"},{"attributes":{"editor":{"id":"a952a205-4c6a-4338-9c36-575b16ff6624","type":"StringEditor"},"field":"Compounds\nTested","formatter":{"id":"1f3576db-bf51-46eb-8b15-7e191d83767b","type":"StringFormatter"},"title":"Compounds\nTested"},"id":"de6e07f9-5541-4989-b20e-7471f6392e80","type":"TableColumn"},{"attributes":{},"id":"19a2a41a-47f3-45f0-8da2-25e17518ac99","type":"StringEditor"},{"attributes":{},"id":"77e849d7-4b93-46ae-a126-9ad8e1c09451","type":"StringFormatter"},{"attributes":{},"id":"66c834a8-3ce3-45f6-9a30-58cd86a2d3c7","type":"StringFormatter"},{"attributes":{},"id":"cce54afe-8155-4c62-928c-919798444040","type":"StringEditor"},{"attributes":{"editor":{"id":"56e9cc16-77ba-4025-8295-f74854a53c82","type":"StringEditor"},"field":"Specificity","formatter":{"id":"aaae26eb-7042-4f3e-97f5-8745347860aa","type":"StringFormatter"},"title":"Specificity"},"id":"57d1f2dd-42fc-4a91-ac86-96f19adc1217","type":"TableColumn"},{"attributes":{},"id":"6c2fad56-ffbf-49f2-9a2d-23e285f93ec5","type":"StringEditor"},{"attributes":{"callback":null,"column_names":["FN","TN","NPV","L parameter","Sensitivity","PPV","PubChem AID","Coverage","CCR","TP","FP","Compounds\nTested","index","Specificity"],"data":{"CCR":[0.57,0.58,0.58,0.8,0.65,0.64,0.56,0.51,0.76,0.5,0.54,0.51,0.58,0.5,0.56,0.53,0.57,0.6,0.55,0.52,0.57,0.5,0.5,0.5,0.5,0.5,0.5,0.63,0.63,0.56,0.52,0.53,0.5,0.51,0.54,0.59,0.58,0.61,0.52,0.55,0.55,0.51,0.58,0.57,0.5,0.52,0.49,0.56,0.54,0.54,0.51,0.54,0.55,0.52,0.6,0.51,0.52,0.71,0.63,0.53],"Compounds\nTested":[88,88,88,19,41,45,17,43,32,33,35,38,31,8,10,56,51,128,153,161,47,7,6,6,7,7,7,79,76,154,159,98,125,73,154,134,137,146,122,151,141,142,141,152,129,139,136,150,155,144,151,133,138,149,128,147,145,38,38,38],"Coverage":[0.32,0.32,0.32,0.07,0.15,0.16,0.06,0.16,0.12,0.12,0.13,0.14,0.11,0.03,0.04,0.21,0.19,0.47,0.56,0.59,0.17,0.03,0.02,0.02,0.03,0.03,0.03,0.29,0.28,0.56,0.58,0.36,0.46,0.27,0.56,0.49,0.5,0.53,0.45,0.55,0.52,0.52,0.52,0.56,0.47,0.51,0.5,0.55,0.57,0.53,0.55,0.49,0.51,0.55,0.47,0.54,0.53,0.14,0.14,0.14],"FN":[17.0,17.0,17.0,4.0,14.0,8.0,0.0,10.0,4.0,0.0,8.0,10.0,6.0,0.0,0.0,11.0,9.0,25.0,35.0,42.0,10.0,0.0,0.0,0.0,0.0,0.0,0.0,15.0,14.0,35.0,42.0,21.0,32.0,21.0,38.0,25.0,25.0,24.0,27.0,36.0,34.0,34.0,34.0,33.0,29.0,33.0,35.0,33.0,35.0,35.0,38.0,34.0,30.0,35.0,24.0,37.0,37.0,6.0,7.0,7.0],"FP":[3,2,2,0,0,2,7,10,3,24,6,7,6,7,7,4,4,4,3,3,5,3,2,2,3,3,3,5,4,4,4,11,8,5,2,15,13,14,6,3,2,6,4,9,6,4,8,1,7,2,8,2,2,5,4,4,3,1,3,8],"L parameter":[3.19,4.25,4.25,5.4,6.3,3.67,1.0,0.97,3.33,0.96,1.1,0.96,1.3,0.88,1.0,1.32,1.95,4.61,3.53,1.93,1.57,0.75,0.67,0.67,0.75,0.75,0.75,3.25,3.67,3.31,1.52,1.31,0.86,1.02,3.56,2.05,2.08,2.55,1.31,3.35,4.36,1.22,3.77,2.36,0.9,1.72,0.59,7.37,2.09,3.59,1.15,3.33,4.08,1.46,4.8,1.11,1.97,6.14,2.45,1.09],"NPV":[0.79,0.79,0.79,0.69,0.6,0.79,1.0,0.62,0.81,0.0,0.68,0.62,0.7,0.0,1.0,0.78,0.8,0.78,0.76,0.73,0.74,0.0,0.0,0.0,0.0,0.0,0.0,0.77,0.78,0.76,0.72,0.74,0.72,0.68,0.74,0.76,0.78,0.8,0.76,0.75,0.75,0.74,0.74,0.75,0.76,0.75,0.72,0.77,0.75,0.75,0.73,0.73,0.77,0.75,0.79,0.74,0.73,0.81,0.77,0.73],"PPV":[0.57,0.67,0.67,1.0,1.0,0.67,0.56,0.41,0.73,0.27,0.4,0.42,0.45,0.12,0.22,0.33,0.43,0.67,0.62,0.5,0.44,0.57,0.67,0.67,0.57,0.57,0.57,0.62,0.64,0.6,0.43,0.35,0.27,0.38,0.67,0.46,0.43,0.48,0.33,0.62,0.71,0.33,0.67,0.5,0.25,0.43,0.2,0.83,0.46,0.67,0.33,0.67,0.67,0.38,0.67,0.33,0.5,0.83,0.57,0.33],"PubChem AID":[155,157,175,328,330,1030,1188,1189,1194,1195,1199,1205,1208,1811,1996,504832,504834,651631,651633,651634,651741,678712,678713,678714,678715,678716,678717,686978,686979,720552,720634,720635,720637,720659,720693,743012,743014,743015,743035,743042,743054,743063,743064,743065,743067,743074,743079,743083,743085,743091,743122,743194,743199,743209,743219,743224,743228,1117336,1117342,1117343],"Sensitivity":[0.19,0.19,0.19,0.6,0.3,0.33,1.0,0.41,0.67,1.0,0.33,0.33,0.45,1.0,1.0,0.15,0.25,0.24,0.12,0.07,0.29,1.0,1.0,1.0,1.0,1.0,1.0,0.35,0.33,0.15,0.07,0.22,0.09,0.12,0.1,0.34,0.29,0.35,0.1,0.12,0.13,0.08,0.19,0.21,0.06,0.08,0.05,0.13,0.15,0.1,0.1,0.11,0.12,0.08,0.25,0.05,0.07,0.45,0.36,0.36],"Specificity":[0.96,0.97,0.97,1.0,1.0,0.94,0.12,0.62,0.85,0.0,0.74,0.7,0.7,0.0,0.12,0.91,0.9,0.96,0.97,0.97,0.85,0.0,0.0,0.0,0.0,0.0,0.0,0.91,0.93,0.96,0.96,0.85,0.91,0.9,0.98,0.84,0.87,0.87,0.93,0.97,0.98,0.94,0.96,0.92,0.94,0.96,0.92,0.99,0.94,0.98,0.93,0.98,0.98,0.95,0.96,0.96,0.97,0.96,0.89,0.7],"TN":[64,65,65,9,21,31,1,16,17,0,17,16,14,0,1,39,35,91,110,113,28,0,0,0,0,0,0,51,51,109,110,60,82,44,110,81,89,95,86,107,100,99,95,101,92,99,91,111,107,103,101,93,102,106,92,104,102,26,24,19],"TP":[4,4,4,6,6,4,9,7,8,9,4,5,5,1,2,2,3,8,5,3,4,4,4,4,4,4,4,8,7,6,3,6,3,3,4,13,10,13,3,5,5,3,8,9,2,3,2,5,6,4,4,4,4,3,8,2,3,5,4,4],"index":[155,157,175,328,330,1030,1188,1189,1194,1195,1199,1205,1208,1811,1996,504832,504834,651631,651633,651634,651741,678712,678713,678714,678715,678716,678717,686978,686979,720552,720634,720635,720637,720659,720693,743012,743014,743015,743035,743042,743054,743063,743064,743065,743067,743074,743079,743083,743085,743091,743122,743194,743199,743209,743219,743224,743228,1117336,1117342,1117343]}},"id":"68a6f96d-f10c-4d80-bd53-9552ff91d7a7","type":"ColumnDataSource"},{"attributes":{"editor":{"id":"cce54afe-8155-4c62-928c-919798444040","type":"StringEditor"},"field":"Coverage","formatter":{"id":"4171810a-0e5b-4146-b2ce-9baeee507c01","type":"StringFormatter"},"title":"Coverage"},"id":"491998d1-81f1-4455-99b0-ae92c3ba4b36","type":"TableColumn"},{"attributes":{},"id":"91323cc7-11a8-40fe-aeda-27fcd3bcf1c4","type":"StringEditor"},{"attributes":{},"id":"17487587-c144-4236-b8c2-89eba78f19d9","type":"StringFormatter"},{"attributes":{},"id":"53615487-2e12-43f7-b228-be89449d45a3","type":"StringEditor"},{"attributes":{"columns":[{"id":"c40bf2c5-2d92-4176-abd6-3276eb4f4639","type":"TableColumn"},{"id":"de6e07f9-5541-4989-b20e-7471f6392e80","type":"TableColumn"},{"id":"6bc60558-1210-43b2-8255-ca74ea270091","type":"TableColumn"},{"id":"9ef8a1aa-bb36-4e09-9316-8ffb748143df","type":"TableColumn"},{"id":"41d052ea-67c4-4003-9b41-c7afe25163c8","type":"TableColumn"},{"id":"f0fd1303-6a08-4246-bcfb-d899d4bc2031","type":"TableColumn"},{"id":"930d9215-db72-401c-b6ae-b4b282ee7e81","type":"TableColumn"},{"id":"e6c53656-3850-4ef2-8945-eb1eda135f61","type":"TableColumn"},{"id":"903478a8-0737-477a-956e-6478e85cfd67","type":"TableColumn"},{"id":"49c2819e-570d-406f-ad76-ebed9729d2c1","type":"TableColumn"},{"id":"ddc4206d-8753-46d1-be2e-50d5cf520c15","type":"TableColumn"},{"id":"3381dc91-6e93-4a90-bc7a-cd4432f6af5a","type":"TableColumn"},{"id":"491998d1-81f1-4455-99b0-ae92c3ba4b36","type":"TableColumn"}],"height":1600,"row_headers":false,"selectable":"checkbox","source":{"id":"68a6f96d-f10c-4d80-bd53-9552ff91d7a7","type":"ColumnDataSource"},"width":800},"id":"222f0b9d-1606-4263-af7b-9bb503a2cf06","type":"DataTable"},{"attributes":{"editor":{"id":"629a8ff5-64c8-4760-bc55-776c1e27bd76","type":"StringEditor"},"field":"FN","formatter":{"id":"2dc80b48-77bf-4825-8906-9a316c64351f","type":"StringFormatter"},"title":"FN"},"id":"3652c810-5bfa-4fe3-b1e4-6267e20ec621","type":"TableColumn"},{"attributes":{},"id":"fc9e8ddd-5c1d-4716-9061-338e5ff88ce6","type":"StringEditor"},{"attributes":{},"id":"70228a8b-0636-4f24-ab04-e908990c3e59","type":"StringFormatter"},{"attributes":{},"id":"56d4d51d-4ef5-4556-9457-3e94519b87de","type":"StringEditor"},{"attributes":{},"id":"f94fb381-35b9-4130-b04b-e1abfe4a98db","type":"StringFormatter"},{"attributes":{},"id":"b30d94e4-eca9-41eb-bda7-61cf23eb128e","type":"StringEditor"},{"attributes":{},"id":"4171810a-0e5b-4146-b2ce-9baeee507c01","type":"StringFormatter"},{"attributes":{"editor":{"id":"c6e3b936-2325-4854-9484-5d41cd58f7ec","type":"StringEditor"},"field":"PubChem AID","formatter":{"id":"110e5df3-96b1-47f7-a489-905edc7fc878","type":"StringFormatter"},"title":"PubChem AID"},"id":"b6e419e3-e785-489a-be39-cb15d244ab77","type":"TableColumn"},{"attributes":{},"id":"73003af7-ed10-423b-95eb-1128bf0bc60c","type":"StringFormatter"},{"attributes":{},"id":"f876a170-aebc-4412-9839-2889d275396b","type":"StringEditor"},{"attributes":{},"id":"b33dc400-50b8-4598-a47e-94fa92e17e21","type":"StringFormatter"},{"attributes":{"columns":[{"id":"b6e419e3-e785-489a-be39-cb15d244ab77","type":"TableColumn"},{"id":"15573324-42f4-4ba3-abc4-c93266566c91","type":"TableColumn"},{"id":"6b351f56-b1d8-4807-be97-397b4ca2eab4","type":"TableColumn"},{"id":"232da399-ca9a-4ee1-81ce-af313dca7ed2","type":"TableColumn"},{"id":"022db3f7-0212-4be6-8ff5-712e75dd7f44","type":"TableColumn"},{"id":"3652c810-5bfa-4fe3-b1e4-6267e20ec621","type":"TableColumn"},{"id":"621161ec-86ca-41c7-96c7-94899399f6e3","type":"TableColumn"},{"id":"57d1f2dd-42fc-4a91-ac86-96f19adc1217","type":"TableColumn"},{"id":"14284d6c-d8d1-4d7b-9566-64ae50660185","type":"TableColumn"},{"id":"061f9407-b152-4be7-8bee-09101afeb448","type":"TableColumn"},{"id":"afb7cef2-263c-4e99-9f74-658c03ce8033","type":"TableColumn"},{"id":"40f92e2a-6ed7-4860-a8f1-e49a8f45cdc2","type":"TableColumn"},{"id":"0365b60f-9967-44fc-8bc8-7caeb2c60041","type":"TableColumn"}],"height":1600,"row_headers":false,"selectable":"checkbox","source":{"id":"195bb3f9-82d9-439d-b3d0-793a9399d000","type":"ColumnDataSource"},"width":800},"id":"a14518c9-282a-4f9c-8ffa-9221439575be","type":"DataTable"},{"attributes":{"editor":{"id":"91323cc7-11a8-40fe-aeda-27fcd3bcf1c4","type":"StringEditor"},"field":"TN","formatter":{"id":"603d484e-ae0e-42dd-bb7d-83eea779c701","type":"StringFormatter"},"title":"TN"},"id":"232da399-ca9a-4ee1-81ce-af313dca7ed2","type":"TableColumn"},{"attributes":{},"id":"110e5df3-96b1-47f7-a489-905edc7fc878","type":"StringFormatter"},{"attributes":{},"id":"c6e3b936-2325-4854-9484-5d41cd58f7ec","type":"StringEditor"},{"attributes":{},"id":"4bf9075a-b751-4929-98d2-b17b396e7295","type":"StringEditor"},{"attributes":{},"id":"f967d77b-0616-4c4c-a1df-4f46df0ce4ec","type":"StringFormatter"},{"attributes":{"editor":{"id":"53615487-2e12-43f7-b228-be89449d45a3","type":"StringEditor"},"field":"CCR","formatter":{"id":"fbf7794a-6437-440a-9d70-8e73779382da","type":"StringFormatter"},"title":"CCR"},"id":"14284d6c-d8d1-4d7b-9566-64ae50660185","type":"TableColumn"},{"attributes":{"editor":{"id":"676441c3-f54d-4fe5-9717-da227c6e7e20","type":"StringEditor"},"field":"CCR","formatter":{"id":"f94fb381-35b9-4130-b04b-e1abfe4a98db","type":"StringFormatter"},"title":"CCR"},"id":"903478a8-0737-477a-956e-6478e85cfd67","type":"TableColumn"},{"attributes":{},"id":"5761770a-1fbc-4b01-b6a8-9769e33c4203","type":"StringEditor"},{"attributes":{"children":[{"id":"222f0b9d-1606-4263-af7b-9bb503a2cf06","type":"DataTable"}]},"id":"d347d41c-2b8c-40c5-ad62-9396d2e92bab","type":"VBoxForm"},{"attributes":{"editor":{"id":"28dc71e7-f737-4121-ac1b-c9fecdc2615b","type":"StringEditor"},"field":"PPV","formatter":{"id":"a3abc210-1c9a-4c72-8895-cc43621b5eac","type":"StringFormatter"},"title":"PPV"},"id":"49c2819e-570d-406f-ad76-ebed9729d2c1","type":"TableColumn"},{"attributes":{},"id":"aaae26eb-7042-4f3e-97f5-8745347860aa","type":"StringFormatter"},{"attributes":{},"id":"56e9cc16-77ba-4025-8295-f74854a53c82","type":"StringEditor"},{"attributes":{},"id":"e8565d65-3e24-4e35-abb8-5faa8cf46896","type":"StringFormatter"},{"attributes":{"editor":{"id":"b2b88aab-ab33-4c8e-9724-ed5b072a2922","type":"StringEditor"},"field":"NPV","formatter":{"id":"77e849d7-4b93-46ae-a126-9ad8e1c09451","type":"StringFormatter"},"title":"NPV"},"id":"afb7cef2-263c-4e99-9f74-658c03ce8033","type":"TableColumn"},{"attributes":{"editor":{"id":"7fd4cab3-9949-405d-a335-3182ea1b393d","type":"StringEditor"},"field":"PubChem AID","formatter":{"id":"b33dc400-50b8-4598-a47e-94fa92e17e21","type":"StringFormatter"},"title":"PubChem AID"},"id":"c40bf2c5-2d92-4176-abd6-3276eb4f4639","type":"TableColumn"},{"attributes":{},"id":"12c8edb4-8e3e-426d-bc5e-2c5de4b7d530","type":"StringEditor"},{"attributes":{"editor":{"id":"dad54317-1f80-467e-becb-28ee882fea8b","type":"StringEditor"},"field":"TP","formatter":{"id":"f967d77b-0616-4c4c-a1df-4f46df0ce4ec","type":"StringFormatter"},"title":"TP"},"id":"6bc60558-1210-43b2-8255-ca74ea270091","type":"TableColumn"},{"attributes":{},"id":"b98a5155-f713-4a0c-9a24-eedb756b815d","type":"StringFormatter"},{"attributes":{},"id":"629a8ff5-64c8-4760-bc55-776c1e27bd76","type":"StringEditor"},{"attributes":{},"id":"dad54317-1f80-467e-becb-28ee882fea8b","type":"StringEditor"},{"attributes":{"editor":{"id":"12c8edb4-8e3e-426d-bc5e-2c5de4b7d530","type":"StringEditor"},"field":"FN","formatter":{"id":"59eb5b39-1bb1-4c37-81ce-d8e4bd3a658e","type":"StringFormatter"},"title":"FN"},"id":"f0fd1303-6a08-4246-bcfb-d899d4bc2031","type":"TableColumn"},{"attributes":{},"id":"59eb5b39-1bb1-4c37-81ce-d8e4bd3a658e","type":"StringFormatter"},{"attributes":{"editor":{"id":"eb2a61bc-9fb8-4b8e-8ac8-abbd1f7f8f47","type":"StringEditor"},"field":"TN","formatter":{"id":"8f975637-e50d-4c28-9689-843069f571ae","type":"StringFormatter"},"title":"TN"},"id":"9ef8a1aa-bb36-4e09-9316-8ffb748143df","type":"TableColumn"},{"attributes":{},"id":"d2eae0ba-cf63-45ac-b221-eb7ad09791d9","type":"StringFormatter"},{"attributes":{},"id":"a952a205-4c6a-4338-9c36-575b16ff6624","type":"StringEditor"},{"attributes":{"callback":null,"column_names":["FN","TN","NPV","Unnamed: 0","L parameter","Sensitivity","PPV","PubChem AID","Compounds\r\nTested","CCR","TP","FP","index","Coverage","Specificity"],"data":{"CCR":[0.57,0.58,0.58,0.8,0.65,0.64,0.56,0.51,0.76,0.5,0.54,0.51,0.58,0.5,0.56,0.53,0.57,0.6,0.55,0.52,0.57,0.5,0.5,0.5,0.5,0.5,0.5,0.63,0.63,0.56,0.52,0.53,0.5,0.51,0.54,0.59,0.58,0.61,0.52,0.55,0.55,0.51,0.58,0.57,0.5,0.52,0.49,0.56,0.54,0.54,0.51,0.54,0.55,0.52,0.6,0.51,0.52,0.71,0.63,0.53],"Compounds\r\nTested":[88,88,88,19,41,45,17,43,32,33,35,38,31,8,10,56,51,128,153,161,47,7,6,6,7,7,7,79,76,154,159,98,125,73,154,134,137,146,122,151,141,142,141,152,129,139,136,150,155,144,151,133,138,149,128,147,145,38,38,38],"Coverage":[0.32,0.32,0.32,0.07,0.15,0.16,0.06,0.16,0.12,0.12,0.13,0.14,0.11,0.03,0.04,0.21,0.19,0.47,0.56,0.59,0.17,0.03,0.02,0.02,0.03,0.03,0.03,0.29,0.28,0.56,0.58,0.36,0.46,0.27,0.56,0.49,0.5,0.53,0.45,0.55,0.52,0.52,0.52,0.56,0.47,0.51,0.5,0.55,0.57,0.53,0.55,0.49,0.51,0.55,0.47,0.54,0.53,0.14,0.14,0.14],"FN":[17.0,17.0,17.0,4.0,14.0,8.0,0.0,10.0,4.0,0.0,8.0,10.0,6.0,0.0,0.0,11.0,9.0,25.0,35.0,42.0,10.0,0.0,0.0,0.0,0.0,0.0,0.0,15.0,14.0,35.0,42.0,21.0,32.0,21.0,38.0,25.0,25.0,24.0,27.0,36.0,34.0,34.0,34.0,33.0,29.0,33.0,35.0,33.0,35.0,35.0,38.0,34.0,30.0,35.0,24.0,37.0,37.0,6.0,7.0,7.0],"FP":[3,2,2,0,0,2,7,10,3,24,6,7,6,7,7,4,4,4,3,3,5,3,2,2,3,3,3,5,4,4,4,11,8,5,2,15,13,14,6,3,2,6,4,9,6,4,8,1,7,2,8,2,2,5,4,4,3,1,3,8],"L parameter":[3.19,4.25,4.25,5.4,6.3,3.67,1.0,0.97,3.33,0.96,1.1,0.96,1.3,0.88,1.0,1.32,1.95,4.61,3.53,1.93,1.57,0.75,0.67,0.67,0.75,0.75,0.75,3.25,3.67,3.31,1.52,1.31,0.86,1.02,3.56,2.05,2.08,2.55,1.31,3.35,4.36,1.22,3.77,2.36,0.9,1.72,0.59,7.37,2.09,3.59,1.15,3.33,4.08,1.46,4.8,1.11,1.97,6.14,2.45,1.09],"NPV":[0.79,0.79,0.79,0.69,0.6,0.79,1.0,0.62,0.81,0.0,0.68,0.62,0.7,0.0,1.0,0.78,0.8,0.78,0.76,0.73,0.74,0.0,0.0,0.0,0.0,0.0,0.0,0.77,0.78,0.76,0.72,0.74,0.72,0.68,0.74,0.76,0.78,0.8,0.76,0.75,0.75,0.74,0.74,0.75,0.76,0.75,0.72,0.77,0.75,0.75,0.73,0.73,0.77,0.75,0.79,0.74,0.73,0.81,0.77,0.73],"PPV":[0.57,0.67,0.67,1.0,1.0,0.67,0.56,0.41,0.73,0.27,0.4,0.42,0.45,0.12,0.22,0.33,0.43,0.67,0.62,0.5,0.44,0.57,0.67,0.67,0.57,0.57,0.57,0.62,0.64,0.6,0.43,0.35,0.27,0.38,0.67,0.46,0.43,0.48,0.33,0.62,0.71,0.33,0.67,0.5,0.25,0.43,0.2,0.83,0.46,0.67,0.33,0.67,0.67,0.38,0.67,0.33,0.5,0.83,0.57,0.33],"PubChem AID":[0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27,28,29,30,31,32,33,34,35,36,37,38,39,40,41,42,43,44,45,46,47,48,49,50,51,52,53,54,55,56,57,58,59],"Sensitivity":[0.19,0.19,0.19,0.6,0.3,0.33,1.0,0.41,0.67,1.0,0.33,0.33,0.45,1.0,1.0,0.15,0.25,0.24,0.12,0.07,0.29,1.0,1.0,1.0,1.0,1.0,1.0,0.35,0.33,0.15,0.07,0.22,0.09,0.12,0.1,0.34,0.29,0.35,0.1,0.12,0.13,0.08,0.19,0.21,0.06,0.08,0.05,0.13,0.15,0.1,0.1,0.11,0.12,0.08,0.25,0.05,0.07,0.45,0.36,0.36],"Specificity":[0.96,0.97,0.97,1.0,1.0,0.94,0.12,0.62,0.85,0.0,0.74,0.7,0.7,0.0,0.12,0.91,0.9,0.96,0.97,0.97,0.85,0.0,0.0,0.0,0.0,0.0,0.0,0.91,0.93,0.96,0.96,0.85,0.91,0.9,0.98,0.84,0.87,0.87,0.93,0.97,0.98,0.94,0.96,0.92,0.94,0.96,0.92,0.99,0.94,0.98,0.93,0.98,0.98,0.95,0.96,0.96,0.97,0.96,0.89,0.7],"TN":[64,65,65,9,21,31,1,16,17,0,17,16,14,0,1,39,35,91,110,113,28,0,0,0,0,0,0,51,51,109,110,60,82,44,110,81,89,95,86,107,100,99,95,101,92,99,91,111,107,103,101,93,102,106,92,104,102,26,24,19],"TP":[4,4,4,6,6,4,9,7,8,9,4,5,5,1,2,2,3,8,5,3,4,4,4,4,4,4,4,8,7,6,3,6,3,3,4,13,10,13,3,5,5,3,8,9,2,3,2,5,6,4,4,4,4,3,8,2,3,5,4,4],"Unnamed: 0":[155,157,175,328,330,1030,1188,1189,1194,1195,1199,1205,1208,1811,1996,504832,504834,651631,651633,651634,651741,678712,678713,678714,678715,678716,678717,686978,686979,720552,720634,720635,720637,720659,720693,743012,743014,743015,743035,743042,743054,743063,743064,743065,743067,743074,743079,743083,743085,743091,743122,743194,743199,743209,743219,743224,743228,1117336,1117342,1117343],"index":[0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27,28,29,30,31,32,33,34,35,36,37,38,39,40,41,42,43,44,45,46,47,48,49,50,51,52,53,54,55,56,57,58,59]}},"id":"195bb3f9-82d9-439d-b3d0-793a9399d000","type":"ColumnDataSource"},{"attributes":{},"id":"1f3576db-bf51-46eb-8b15-7e191d83767b","type":"StringFormatter"},{"attributes":{},"id":"6e2454c6-6ab2-4ea3-8256-539a4c2f0bdd","type":"StringFormatter"},{"attributes":{"editor":{"id":"6c2fad56-ffbf-49f2-9a2d-23e285f93ec5","type":"StringEditor"},"field":"PPV","formatter":{"id":"b98a5155-f713-4a0c-9a24-eedb756b815d","type":"StringFormatter"},"title":"PPV"},"id":"061f9407-b152-4be7-8bee-09101afeb448","type":"TableColumn"},{"attributes":{"children":[{"id":"a14518c9-282a-4f9c-8ffa-9221439575be","type":"DataTable"}]},"id":"7ddc133c-a5f4-4db6-8b53-569c3255a339","type":"VBoxForm"},{"attributes":{},"id":"03ad9ad8-e70d-44db-a8b9-2631c8086e84","type":"StringEditor"},{"attributes":{"editor":{"id":"b80b536b-1fab-4f40-8096-b6074e8a07ed","type":"StringEditor"},"field":"NPV","formatter":{"id":"73003af7-ed10-423b-95eb-1128bf0bc60c","type":"StringFormatter"},"title":"NPV"},"id":"ddc4206d-8753-46d1-be2e-50d5cf520c15","type":"TableColumn"},{"attributes":{},"id":"2dc80b48-77bf-4825-8906-9a316c64351f","type":"StringFormatter"},{"attributes":{},"id":"7fd4cab3-9949-405d-a335-3182ea1b393d","type":"StringEditor"},{"attributes":{"editor":{"id":"5761770a-1fbc-4b01-b6a8-9769e33c4203","type":"StringEditor"},"field":"TP","formatter":{"id":"17487587-c144-4236-b8c2-89eba78f19d9","type":"StringFormatter"},"title":"TP"},"id":"6b351f56-b1d8-4807-be97-397b4ca2eab4","type":"TableColumn"},{"attributes":{},"id":"b80b536b-1fab-4f40-8096-b6074e8a07ed","type":"StringEditor"},{"attributes":{"editor":{"id":"f876a170-aebc-4412-9839-2889d275396b","type":"StringEditor"},"field":"L parameter","formatter":{"id":"66c834a8-3ce3-45f6-9a30-58cd86a2d3c7","type":"StringFormatter"},"title":"L parameter"},"id":"40f92e2a-6ed7-4860-a8f1-e49a8f45cdc2","type":"TableColumn"},{"attributes":{},"id":"497d8110-df36-4d5c-a21f-2921cdef8101","type":"StringFormatter"},{"attributes":{},"id":"676441c3-f54d-4fe5-9717-da227c6e7e20","type":"StringEditor"},{"attributes":{},"id":"771f13ba-c0de-435e-9863-9787d71add70","type":"StringFormatter"},{"attributes":{"editor":{"id":"b35758fe-920a-4228-8d9d-8b0a0a90f305","type":"StringEditor"},"field":"L parameter","formatter":{"id":"e8565d65-3e24-4e35-abb8-5faa8cf46896","type":"StringFormatter"},"title":"L parameter"},"id":"3381dc91-6e93-4a90-bc7a-cd4432f6af5a","type":"TableColumn"},{"attributes":{},"id":"fbf7794a-6437-440a-9d70-8e73779382da","type":"StringFormatter"},{"attributes":{},"id":"29542ff7-a9a1-4a46-9892-c0ba46e83948","type":"StringFormatter"},{"attributes":{"editor":{"id":"56d4d51d-4ef5-4556-9457-3e94519b87de","type":"StringEditor"},"field":"Specificity","formatter":{"id":"d2eae0ba-cf63-45ac-b221-eb7ad09791d9","type":"StringFormatter"},"title":"Specificity"},"id":"e6c53656-3850-4ef2-8945-eb1eda135f61","type":"TableColumn"},{"attributes":{"editor":{"id":"a8d49d05-d2ca-4f93-aa4e-2f0fedce472e","type":"StringEditor"},"field":"Sensitivity","formatter":{"id":"70228a8b-0636-4f24-ab04-e908990c3e59","type":"StringFormatter"},"title":"Sensitivity"},"id":"930d9215-db72-401c-b6ae-b4b282ee7e81","type":"TableColumn"},{"attributes":{"editor":{"id":"fc9e8ddd-5c1d-4716-9061-338e5ff88ce6","type":"StringEditor"},"field":"Sensitivity","formatter":{"id":"771f13ba-c0de-435e-9863-9787d71add70","type":"StringFormatter"},"title":"Sensitivity"},"id":"621161ec-86ca-41c7-96c7-94899399f6e3","type":"TableColumn"},{"attributes":{},"id":"603d484e-ae0e-42dd-bb7d-83eea779c701","type":"StringFormatter"},{"attributes":{"editor":{"id":"4bf9075a-b751-4929-98d2-b17b396e7295","type":"StringEditor"},"field":"Coverage","formatter":{"id":"497d8110-df36-4d5c-a21f-2921cdef8101","type":"StringFormatter"},"title":"Coverage"},"id":"0365b60f-9967-44fc-8bc8-7caeb2c60041","type":"TableColumn"},{"attributes":{},"id":"b35758fe-920a-4228-8d9d-8b0a0a90f305","type":"StringEditor"}],"root_ids":["d347d41c-2b8c-40c5-ad62-9396d2e92bab","7ddc133c-a5f4-4db6-8b53-569c3255a339"]},"title":"Bokeh Application","version":"0.11.1"}};
+          var render_items = [{"docid":"42d19139-be61-4dfa-831a-935dd58c1dd4","elementid":"c99a55d0-f333-4c35-bb56-acb6c4373cca","modelid":"7ddc133c-a5f4-4db6-8b53-569c3255a339"}];
+          
+          Bokeh.embed.embed_items(docs_json, render_items);
+      });
+    },
+    function(Bokeh) {
+      console.log("Bokeh: injecting CSS: https://cdn.pydata.org/bokeh/release/bokeh-0.11.1.min.css");
+      Bokeh.embed.inject_css("https://cdn.pydata.org/bokeh/release/bokeh-0.11.1.min.css");
+      console.log("Bokeh: injecting CSS: https://cdn.pydata.org/bokeh/release/bokeh-widgets-0.11.1.min.css");
+      Bokeh.embed.inject_css("https://cdn.pydata.org/bokeh/release/bokeh-widgets-0.11.1.min.css");
+    }
+  ];
+
+  function run_inline_js() {
+    for (var i = 0; i < inline_js.length; i++) {
+      inline_js[i](window.Bokeh);
+    }
+  }
+
+  if (window._bokeh_is_loading === 0) {
+    console.log("Bokeh: BokehJS loaded, going straight to plotting");
+    run_inline_js();
+  } else {
+    load_libs(js_urls, function() {
+      console.log("Bokeh: BokehJS plotting callback run at", now());
+      run_inline_js();
+    });
+  }
+}(this));
