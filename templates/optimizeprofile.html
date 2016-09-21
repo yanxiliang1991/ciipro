@@ -15,7 +15,7 @@
 </div>
     <!-- TODO: consider linking these two graphs -->
 <div class="assayselect">
-<form action="/removeassays" method="post" enctype="multipart/form-data">
+<form action="/optimizeassays" method="post" enctype="multipart/form-data">
     {% for aid in aids %}
         {% if (aids.index(aid) % 5 == 0) and (aids.index(aid) != 0) %}
             <label class="checkbox-inline">
@@ -34,7 +34,8 @@
         {% endif %}
     {% endfor %}
     <br>
-<input type="submit" class="btn btn-primary" value="Remove Assays" name="Remove Assays"/>
+<input type="submit" class="btn btn-danger" value="Remove" name="Remove_or_Keep"/>
+<input type="submit" class="btn btn-primary" value="Keep" name="Remove_or_Keep"/>
 </form>
 </div>
 

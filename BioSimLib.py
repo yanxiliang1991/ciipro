@@ -1453,7 +1453,7 @@ def dataTable_bokeh(stats):
             ]
     data_table = DataTable(source=source, columns=columns,
                            editable=False, height=1600, width=800,
-                           selectable='checkbox', fit_columns=True, row_headers=False)
+                            fit_columns=True, row_headers=False)
 
     js, tag = autoload_static(vform(data_table), CDN, 'static/js/datatable.js')
     js_file = open('static/js/datatable.js', 'w')
