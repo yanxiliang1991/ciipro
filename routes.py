@@ -432,8 +432,7 @@ def optimizeprofile():
     """ Renderts optimize bioprofile
     """
     profile = bioprofile_to_pandas(session['cur_prof_dir'])
-    stats_df = pd.read_csv(session['cur_prof_dir'].replace('_BioProfile',
-                                             '_assay_stats'), sep='\t')
+    stats_df = pd.read_csv(session['cur_assay_dir'], sep='\t', index_col=0)
     stats = dataTable_bokeh(stats_df)
     hm = bokehHeatmap(profile)
 
@@ -447,11 +446,22 @@ def optimizeprofile():
 def allowed_file(filename): #method that checks to see if upload file is allowed
     return '.' in filename and filename.rsplit('.', 1)[1] in CIIProConfig.ALLOWED_EXTENSIONS
 
-@app.route('/removeassays', methods=['POST'])
+@app.route('/optimizeassays', methods=['POST'])
 @login_required
 def removeassays():
-    for each in request.form:
-        print(each)
+    remove_or_keep = request.form['Remove_or_Keep']
+    assays = list(map(int, request.form.getlist('aids')))
+    profile = bioprofile_to_pandas(session['cur_prof_dir'])
+    if remove_or_keep == 'Remove':
+        profile.drop(assays, axis=1, inplace=True)
+    else:
+        profile = profile[assays]
+
+    new_name = session['cur_prof_dir'].replace('.txt',
+                                               '_optimized.txt')
+    profile.to_csv(new_name, sep='\t')
+    session['cur_prof_dir'] = new_name
+    return redirect(url_for('optimizeprofile'))
 
 @app.route('/ciiprofile',  methods=['POST'])
 @login_required
@@ -501,6 +511,7 @@ def CIIProfile():
         writer.save()
         stats = dataTable_bokeh(stats_df)        
         session['cur_prof_dir'] = profile_filename.replace('profiles', 'biosims')
+        session['cur_assay_dir'] = session['cur_prof_dir'].replace('_BioProfile', '_assay_stats')
         flash('Success! A profile was created consisting '
               'of {0} compounds and {1} bioassays'.format(profile.shape[0], profile.shape[1]), 'info')
         return render_template('CIIProfiler.html', stats=stats,
