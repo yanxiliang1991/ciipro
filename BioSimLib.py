@@ -71,16 +71,13 @@ def makeBioprofile(df, actives_cutoff=5):
     docs.drop_duplicates(['PUBCHEM_AID', 'PUBCHEM_CID'], inplace=True)
     docs.columns = ['Activity', 'AID', 'CID']
 
-    docs['Activity'][docs['Activity'] == 'Inactive'] = -1
-    docs['Activity'][docs['Activity'] == 'Active'] = 1
-    m = (docs['Activity'] != 1) & (docs['Activity'] != -1)
-    docs['Activity'][m] = 0
-
     docs = docs.pivot(index='CID', columns='AID', values='Activity')
     del docs.index.name
     del docs.columns.name
-    docs.fillna(0)
-    
+    docs.replace('Inactive', -1, inplace=True)
+    docs.replace('Active', 1, inplace=True)
+    docs.replace('(Inconclusive|None|Unspecified)', 0, inplace=True)
+    print(docs)
     sums = pd.Series(docs[docs > 0].sum(), index=docs.columns)
     m = sums >= actives_cutoff
     docs = docs.loc[:, m]
