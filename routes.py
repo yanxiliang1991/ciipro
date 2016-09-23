@@ -14,6 +14,7 @@ from BioSimLib import *
 #import urllib
 import zipfile
 
+# TODO: go through each module and identifiy and take out passwords, security crucial information
 
 # These variables are configured in CIIProConfig
 app = Flask(__name__)
