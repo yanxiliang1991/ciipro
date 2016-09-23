@@ -427,6 +427,7 @@ def CIIPPredictor():
                            username=g.user.username, testsets=testsets)	
 
 
+# TODO Create a save button to save optimized profile, allow for name
 @app.route('/optimizeprofile')
 @login_required
 def optimizeprofile():
@@ -434,10 +435,7 @@ def optimizeprofile():
     """
     profile = bioprofile_to_pandas(session['cur_prof_dir'])
     stats_df = pd.read_csv(session['cur_assay_dir'], sep='\t', index_col=0)
-    import os
-    print(os.getcwd())
-    import bokeh
-    print(bokeh.__version__)
+    import
     stats = dataTable_bokeh(stats_df)
     hm = bokehHeatmap(profile)
 
