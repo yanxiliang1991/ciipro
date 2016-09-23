@@ -435,7 +435,6 @@ def optimizeprofile():
     """
     profile = bioprofile_to_pandas(session['cur_prof_dir'])
     stats_df = pd.read_csv(session['cur_assay_dir'], sep='\t', index_col=0)
-    import
     stats = dataTable_bokeh(stats_df)
     hm = bokehHeatmap(profile)
 
