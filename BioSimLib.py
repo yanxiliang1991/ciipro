@@ -48,42 +48,48 @@ def nn_to_pandas(f):
     df = pd.read_csv(f)
     return df
 
+
 def makeBioprofile(df, actives_cutoff=5):
-    """ Returns a Pandas DataFrame of CIDS as the index and AIDs as the columns, with bioassays response information as 
+    """ Returns a Pandas DataFrame of CIDS as the index and AIDs as the columns, with bioassays response information as
         values.
-        
+
         df: A Pandas dataFrame where index are CIDS
         actives_cutoff (int): default=5, number of actives that must be in each PubChem AID
     """
-    L = [int(x) for x in df.index] # get the cids
-    
+    L = [int(x) for x in df.index]  # get the cids
+
     client = pymongo.MongoClient("ciipro.rutgers.edu", 27017)
     client.test.authenticate('ciipro', 'ciiprorutgers', mechanism='SCRAM-SHA-1')
     db = client.test
-    bioassays = db.Bioassays    
-    
-    docs = pd.DataFrame(list(bioassays.find({"PUBCHEM_CID":{ "$in": L}}, 
-                                            {'PUBCHEM_ACTIVITY_OUTCOME':1, 'PUBCHEM_AID':1, 'PUBCHEM_CID':1, "_id":0}
-                                           )
-                            )
-                       )
-    client.close()                
+    bioassays = db.Bioassays
+
+    docs = pd.DataFrame(list(bioassays.find({"PUBCHEM_CID": {"$in": L}},
+                                            {'PUBCHEM_ACTIVITY_OUTCOME': 1, 'PUBCHEM_AID': 1, 'PUBCHEM_CID': 1,
+                                             "_id": 0}
+                                            )
+                             )
+                        )
+    client.close()
     docs.drop_duplicates(['PUBCHEM_AID', 'PUBCHEM_CID'], inplace=True)
     docs.columns = ['Activity', 'AID', 'CID']
+
+    docs['Activity'][docs['Activity'] == 'Inactive'] = -1
+    docs['Activity'][docs['Activity'] == 'Active'] = 1
+    m = (docs['Activity'] != 1) & (docs['Activity'] != -1)
+    docs['Activity'][m] = 0
 
     docs = docs.pivot(index='CID', columns='AID', values='Activity')
     del docs.index.name
     del docs.columns.name
-    docs.replace('Inactive', -1, inplace=True)
-    docs.replace('Active', 1, inplace=True)
-    docs.replace('(Inconclusive|None|Unspecified)', 0, inplace=True)
-    print(docs)
+    docs.fillna(0)
+
     sums = pd.Series(docs[docs > 0].sum(), index=docs.columns)
     m = sums >= actives_cutoff
     docs = docs.loc[:, m]
-    
+
     docs = docs[(docs.T != 0).any()]
     return docs.fillna(0)
+
 
 def makeRow(cid, bioassays):
     """Returns responses for a CID as a Pandas DataFrame object with AIDs as index
