@@ -434,6 +434,10 @@ def optimizeprofile():
     """
     profile = bioprofile_to_pandas(session['cur_prof_dir'])
     stats_df = pd.read_csv(session['cur_assay_dir'], sep='\t', index_col=0)
+    import os
+    print(os.getcwd())
+    import bokeh
+    print(bokeh.__version__)
     stats = dataTable_bokeh(stats_df)
     hm = bokehHeatmap(profile)
 
@@ -510,13 +514,11 @@ def CIIProfile():
         profile.to_excel(writer, 'Bioprofile')
         stats_df.to_excel(writer, 'In vitro-in vivo correlations')
         writer.save()
-        stats = dataTable_bokeh(stats_df)        
         session['cur_prof_dir'] = profile_filename.replace('profiles', 'biosims')
         session['cur_assay_dir'] = session['cur_prof_dir'].replace('_BioProfile', '_assay_stats')
         flash('Success! A profile was created consisting '
               'of {0} compounds and {1} bioassays'.format(profile.shape[0], profile.shape[1]), 'info')
-        return render_template('CIIProfiler.html', stats=stats,
-                                       datasets=datasets)
+        return render_template('CIIProfiler.html', stats=~stats_df.empty, datasets=datasets)
 
 
     
@@ -704,8 +706,6 @@ def activitycliffs():
     return render_template('CIIProTools.html', datasets=datasets, 
                            username=g.user.username, ac=df.to_html())	
 
-
-
                                
 def zipBiosimFiles(USER_BIOSIMS_FOLDER, filename):
     """ Zips biosimilarity, confidence, and biological nearest neighbor files.
@@ -716,8 +716,7 @@ def zipBiosimFiles(USER_BIOSIMS_FOLDER, filename):
     z.write(filename + '_Bioneighbor.txt')
     z.write(filename + '_BioSim_Conf.txt')
     z.close()
-  
-                
+
 
 def zipPredictionsFiles(biosims_dir):
     """ Zips biosimilarity, confidence, biological nearest neighbor, and bioprediction files.
@@ -776,8 +775,6 @@ def contact():
 @app.errorhandler(500)
 def internalServiceError(e):
     return render_template('500.html'), 500
-
-
 
 
 if __name__ == '__main__': #says if this scripts is run directly, start the application

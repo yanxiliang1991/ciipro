@@ -9,5 +9,8 @@ ciipro_config.py
 
 /__pycache__
 
+# keep resources local
+resources/*
+
 # .pyc files
 *.pyc
