@@ -491,7 +491,7 @@ def getIVIC(act, df):
     df: a Pandas DataFrame with Bioassay response information
     sortby (str): Default: 'CCR'. Column to sort in vitro, in vivo correlations by. 
     """
-    columns = ['Compounds\nTested', 'TP', 'TN', 'FP', 'FN', 'Sensitivity', 'Specificity', 'CCR', 'PPV', 'NPV', 'L parameter', 'Coverage']
+    columns = ['TP', 'TN', 'FP', 'FN', 'Sensitivity', 'Specificity', 'CCR', 'PPV', 'NPV', 'L parameter', 'Coverage']
     aid_stats = pd.DataFrame(index=df.columns, columns=columns )
     for aid in df:
         TP, TN, FP, FN = getClasses(act, df[aid])
@@ -502,7 +502,7 @@ def getIVIC(act, df):
         npv = getNPV(TN, FN)
         l_parameter = getL(TP, TN, FP, FN)
         cov = (TP + TN + FP + FN)/len(df)
-        L = [TP+TN+FN+FP, TP, TN, FP, FN, sens, spec, ccr, ppv, npv, l_parameter, cov]
+        L = [TP, TN, FP, FN, sens, spec, ccr, ppv, npv, l_parameter, cov]
         L[:4] = map(int, L[:4])
         L[4:] = [round(stat, 2) for stat in L[4:]]
         aid_stats.loc[aid, :] = L
@@ -1442,7 +1442,6 @@ def dataTable_bokeh(stats):
     source = ColumnDataSource(stats)
     columns = [
         TableColumn(field="PubChem AID", title="PubChem AID"),
-        TableColumn(field="Compounds\nTested", title="Compounds\nTested"),
         TableColumn(field="TP", title="TP"),
         TableColumn(field="TN", title="TN"),
         TableColumn(field="FP", title="FP"),           
@@ -1456,8 +1455,8 @@ def dataTable_bokeh(stats):
         TableColumn(field="Coverage", title="Coverage")  
             ]
     data_table = DataTable(source=source, columns=columns,
-                           editable=False, height=1600, width=800,
-                            fit_columns=True, row_headers=False)
+                           editable=False, height=1600, width=1000, fit_columns=True,
+                        row_headers=False)
 
     js, tag = autoload_static(vform(data_table), CDN, 'static/js/datatable.js')
     js_file = open('static/js/datatable.js', 'w')
