@@ -571,19 +571,21 @@ def CIIPPredict():
             confidence[0] = float(confidence[0])*0
         
             nns = request.form['nns']
-            
+
+            training_filename = profile_filename.split('_BioProfile')[0] + '.txt'
+
             bioprofile = bioprofile_to_pandas(profile_directory)
             test = file_to_pandas(compound_directory)
             biosims, conf = get_BioSim(bioprofile, test)
-            biosims.to_csv(USER_BIOSIMS_FOLDER + '/' +  profile_filename.replace('_BioProfile', '_BioSim'), sep='\t')
-            conf.to_csv(USER_BIOSIMS_FOLDER + '/' +  profile_filename.replace('_BioProfile', '_Conf'), sep='\t')
-            writer = getExcel(USER_BIOSIMS_FOLDER + '/' +  profile_filename.replace('_BioProfile.txt', '_BioSim_Conf.xlsx'))
-            biosims.to_excel(writer, 'Biosimilarity')
-            conf.to_excel(writer, 'Confidence Scores')
-            writer.save()
+            biosims.to_csv(USER_BIOSIMS_FOLDER + '/' +  profile_filename.replace('_BioProfile', '_BioSim_{0}_{1}_{2}'.format(cutoff[0], confidence[0], nns)), sep='\t')
+            conf.to_csv(USER_BIOSIMS_FOLDER + '/' +  profile_filename.replace('_BioProfile', '_Conf_{0}_{1}_{2}'.format(cutoff[0], confidence[0], nns)), sep='\t')
+            # writer = getExcel(USER_BIOSIMS_FOLDER + '/' +  profile_filename.replace('_BioProfile.txt', '_BioSim_Conf.xlsx'))
+            # biosims.to_excel(writer, 'Biosimilarity')
+            # conf.to_excel(writer, 'Confidence Scores')
+            # writer.save()
             # get smiles
             smi_test = smi_series(compound_directory)
-            smi_train = smi_series(USER_COMPOUNDS_FOLDER + '/' + profile_filename.replace('_BioProfile.txt', '.txt'))
+            smi_train = smi_series(USER_COMPOUNDS_FOLDER + '/' + training_filename)
         
             # remove compounds no in bioprofile
             s_train = smi_train.loc[smi_train.index.intersection(bioprofile.index)]
@@ -602,7 +604,7 @@ def CIIPPredict():
             acts = []
             NN_bool = []
             testsets = [testset for testset in os.listdir(USER_TEST_SET_FOLDER)]
-            train_act = act_series(USER_COMPOUNDS_FOLDER + '/' + profile_filename.replace('_BioProfile.txt', '.txt'))
+            train_act = act_series(USER_COMPOUNDS_FOLDER + '/' + training_filename)
             for nn in NNs:
                 if not NNs[nn].empty:
                     NN_bool.append(True)
