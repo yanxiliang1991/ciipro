@@ -150,42 +150,45 @@
 </form>
 
 <!-- TODO: Fix the width of the table here -->
+    <div class="row" >
+        <div class="col-md-3">
+            {% if cids %}
+                <a href="/sendbiosims">Click Here to download biosimilarity calculation files</a>
+                <br>
+                <b>Active</b>: 1 <br>
+                <b>Inconclusive</b>: 0.5 <br>
+                <b>Inactive</b>: 0 <br>
+                <table style="width: 100%; border: 1px solid blue;">
+                    <tr style="width: 100%; background-color: LightGray; border: 1px solid blue;">
+                        <th style="width: 20%; background-color: LightGray; border: 1px solid blue;"><b>CID</b></th>
+                        <th style="text-align:center; width: 20%; background-color: LightGray; border: 1px solid blue;"><b><i>In vivo</i> Activity</b></th>
+                        <th style="text-align:center; width: 20%; background-color: LightGray; border: 1px solid blue;"><b>CIIP Predictor Activity</b></th>
+                    </tr>
 
-{% if cids %}
-    <a href="/sendbiosims">Click Here to download biosimilarity calculation files</a>
-    <br>
-    <b>Active</b>: 1 <br>
-    <b>Inconclusive</b>: 0.5 <br>
-    <b>Inactive</b>: 0 <br>
-    <table style="width: 100%; border: 1px solid blue;">
-        <tr style="width: 100%; background-color: LightGray; border: 1px solid blue;">
-            <th style="width: 20%; background-color: LightGray; border: 1px solid blue;"><b>CID</b></th>
-            <th style="text-align:center; width: 20%; background-color: LightGray; border: 1px solid blue;"><b><i>In vivo</i> Activity</b></th>
-            <th style="text-align:center; width: 20%; background-color: LightGray; border: 1px solid blue;"><b>CIIP Predictor Activity</b></th>
-        </tr>
-
-        {% for i in range(0, len_cids) %}
-        <tr style="width: 100%; background-color: LightGray; border: 1px solid blue;">
-            {% if NN_bool[i]  %}
-            <td style="width: 20%; background-color: LightGray; border: 1px solid blue;"><a href="/similarity{{ cids[i] }}" target="_blank">{{ cids[i] }}</a></td>
-            {% else %}
-            <td style="width: 20%; background-color: LightGray; border: 1px solid blue;">{{ cids[i] }}</td>
+                    {% for i in range(0, len_cids) %}
+                    <tr style="width: 100%; background-color: LightGray; border: 1px solid blue;">
+                        {% if NN_bool[i]  %}
+                        <td style="width: 20%; background-color: LightGray; border: 1px solid blue;"><a href="/similarity{{ cids[i] }}" target="_blank">{{ cids[i] }}</a></td>
+                        {% else %}
+                        <td style="width: 20%; background-color: LightGray; border: 1px solid blue;">{{ cids[i] }}</td>
+                        {% endif %}
+                        <td style="text-align:center; width: 20%; background-color: LightGray; border: 1px solid blue;">{{ acts[i] }}</td>
+                        <td style="text-align:center; width: 20%; background-color: LightGray; border: 1px solid blue;">{{ preds[i] }}</td>
+                    </tr>
+                    {% endfor %}
+                </table>
             {% endif %}
-            <td style="text-align:center; width: 20%; background-color: LightGray; border: 1px solid blue;">{{ acts[i] }}</td>
-            <td style="text-align:center; width: 20%; background-color: LightGray; border: 1px solid blue;">{{ preds[i] }}</td>
-        </tr>
-        {% endfor %}
-    </table>
-{% endif %}
-
-{% if sim_graph %}
-
-        <div class="row" >
-            <div class="col-lg">
-                   {{ sim_graph|safe }}
-            </div>
         </div>
+    </div>
 
-{% endif %}
+    {% if sim_graph %}
+
+    <div class="row" >
+        <div class="col-lg">
+               {{ sim_graph|safe }}
+        </div>
+    </div>
+
+    {% endif %}
 </div>
 {% endblock %}

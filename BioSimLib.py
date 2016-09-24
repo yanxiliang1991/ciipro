@@ -1420,7 +1420,7 @@ def sim_graph(target, NNs, nn_cutoff, max_conf):
     f.toolbar_location = "below"
     f.logo = None
     js, tag = autoload_static(f, CDN, 'static/js/sim.js')
-    js_file = open('/nvme0n1/ciipro/vm189_zhu/www_ciipro/live/static/js/sim.js', 'w')
+    js_file = open('static/js/sim.js', 'w')
     js_file.write(js)
     js_file.close()
     return tag

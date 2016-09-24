@@ -576,6 +576,11 @@ def CIIPPredict():
 
             bioprofile = bioprofile_to_pandas(profile_directory)
             test = file_to_pandas(compound_directory)
+            # if os.path.isfile(USER_BIOSIMS_FOLDER + '/' +
+            #                           profile_filename.replace('_BioProfile', '_BioSim_{0}_{1}_{2}'.format(cutoff[0],
+            #                                                                                                confidence[0], nns))):
+            #     biosims = pd.read_csv(profile_filename.replace('_BioProfile', '_BioSim_{0}_{1}_{2}'.format(cutoff[0], confidence[0], nns)), sep='\t', index_col=0)
+
             biosims, conf = get_BioSim(bioprofile, test)
             biosims.to_csv(USER_BIOSIMS_FOLDER + '/' +  profile_filename.replace('_BioProfile', '_BioSim_{0}_{1}_{2}'.format(cutoff[0], confidence[0], nns)), sep='\t')
             conf.to_csv(USER_BIOSIMS_FOLDER + '/' +  profile_filename.replace('_BioProfile', '_Conf_{0}_{1}_{2}'.format(cutoff[0], confidence[0], nns)), sep='\t')
