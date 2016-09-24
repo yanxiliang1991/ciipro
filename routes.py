@@ -764,6 +764,10 @@ def sendbioprofile():
 @login_required
 def sendactcliff():
     return send_file(session['cur_ciff_dir'], as_attachment=True)
+
+@app.route('/trainingsettutorial')
+def trainingsettutorial():
+    return send_file('resources/')
   
  
 @app.route('/contact')
