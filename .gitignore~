@@ -9,13 +9,6 @@ ciipro_config.py
 
 /__pycache__
 
-# database
-users.db
-
-# uploads folders
-
-/uploads.lustre
-/uploads_local
 
 # .pyc files
 *.pyc
