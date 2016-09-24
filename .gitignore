@@ -1,8 +1,9 @@
 # Created by .ignore support plugin (hsz.mobi)
 /.idea
 
-# ignore the config file, should be set  up by the user
+# ignore the config files
 ciipro_config.py
+ciipro_app.wsgi
 
 # javascript files
 /static/js/*
@@ -16,6 +17,7 @@ users.db
 
 /uploads.lustre
 /uploads_local
+
 
 # .pyc files
 *.pyc
