@@ -1,5 +1,6 @@
 import pandas as pd
 import pymongo
+from ciipro_config import CIIProConfig
 
 
 def pandas_to_file(df, filename):
@@ -58,8 +59,8 @@ def makeBioprofile(df, actives_cutoff=5):
     """
     L = [int(x) for x in df.index]  # get the cids
 
-    client = pymongo.MongoClient("ciipro.rutgers.edu", 27017)
-    client.test.authenticate('ciipro', 'ciiprorutgers', mechanism='SCRAM-SHA-1')
+    client = pymongo.MongoClient(CIIProConfig.DB_SITE, 27017)
+    client.test.authenticate(CIIProConfig.DB_USERNAME, CIIProConfig.DB_PASSWORD, mechanism='SCRAM-SHA-1')
     db = client.test
     bioassays = db.Bioassays
 
