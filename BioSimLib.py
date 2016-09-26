@@ -1,6 +1,9 @@
 import pandas as pd
 import pymongo
 from ciipro_config import CIIProConfig
+import os
+
+DIR = os.path.dirname(__file__)
 
 
 def pandas_to_file(df, filename):
@@ -528,7 +531,6 @@ def getSMILESfromCID(CID):
     
 def ifCas(compound):
     """ Returns List of CIDS
-    
     compound (str): A Cas registery number or common name identifier
     """
     try:
@@ -765,12 +767,13 @@ def bokehHeatmap(df):
     hm.axis.major_label_text_color = None
     hm.logo = None
     js, tag = autoload_static(hm, CDN, 'static/js/heatmap.js')
-    js_file = open('static/js/heatmap.js', 'w')
+    js_file = open(os.path.join(DIR, 'static/js/heatmap.js'), 'w')
     js_file.write(js)
     js_file.close()
     return tag
 
 def getCoords(angle, biosim):
+   
     import math
     lil_angle = math.radians(angle)
     big_angle = math.radians(90-angle)
@@ -1420,8 +1423,9 @@ def sim_graph(target, NNs, nn_cutoff, max_conf):
     f.legend.background_fill_alpha = 0.8
     f.toolbar_location = "below"
     f.logo = None
+    #path = os.path.join(DIR, 'static/js/sim.js')
     js, tag = autoload_static(f, CDN, 'static/js/sim.js')
-    js_file = open('static/js/sim.js', 'w')
+    js_file = open(os.path.join(DIR, 'static/js/sim.js'), 'w')
     js_file.write(js)
     js_file.close()
     return tag
@@ -1457,9 +1461,8 @@ def dataTable_bokeh(stats):
     data_table = DataTable(source=source, columns=columns,
                            editable=False, height=1600, width=1000, fit_columns=True,
                         row_headers=False)
-
     js, tag = autoload_static(vform(data_table), CDN, 'static/js/datatable.js')
-    js_file = open('static/js/datatable.js', 'w')
+    js_file = open(os.path.join(DIR, 'static/js/datatable.js'), 'w')
     js_file.write(js)
     js_file.close()
     return tag

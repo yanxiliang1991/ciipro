@@ -17,11 +17,13 @@ import zipfile
 # TODO: go through each module and identifiy and take out passwords, security crucial information
 
 # These variables are configured in CIIProConfig
+# TODO: put all this in a true config file
 app = Flask(__name__)
 app.config['UPLOAD_FOLDER'] = CIIProConfig.UPLOAD_FOLDER
 app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///users.db'
 app.secret_key = CIIProConfig.APP_SECRET_KEY
 app.config['RECAPTCHA_PRIVATE_KEY'] = CIIProConfig.RECAPTCHA_PRIVATE_KEY
+
 
 
 db = SQLAlchemy(app)
