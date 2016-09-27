@@ -1,5 +1,6 @@
 # Created by .ignore support plugin (hsz.mobi)
 /.idea
+.spyderworkspace
 
 # ignore the config files
 ciipro_config.py
@@ -18,6 +19,8 @@ users.db
 /uploads.lustre
 /uploads_local
 
+# vim files 
+.swp
 
 # .pyc files
 *.pyc
