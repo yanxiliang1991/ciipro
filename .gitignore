@@ -20,7 +20,7 @@ users.db
 /uploads_local
 
 # vim files 
-.swp
+*.swp
 
 # .pyc files
 *.pyc
