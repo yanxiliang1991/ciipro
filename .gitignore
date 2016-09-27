@@ -6,8 +6,6 @@
 ciipro_config.py
 ciipro_app.wsgi
 
-# javascript files
-/static/js/*
 
 /__pycache__
 
