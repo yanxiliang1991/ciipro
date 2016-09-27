@@ -1,5 +1,6 @@
 from BioSimLib import file_to_pandas, makeBioprofile
 from ciipro_config import CIIProConfig
+from tests import skiptest
 
 class TestBioProfile:
     def setup(self):
@@ -10,3 +11,4 @@ class TestBioProfile:
         profile = makeBioprofile(df, actives_cutoff=3)
         print(profile)
         assert False
+

@@ -2,8 +2,10 @@ import pandas as pd
 import pymongo
 from ciipro_config import CIIProConfig
 import os
+import logging
 
 DIR = os.path.dirname(__file__)
+log = logging.getLogger(__name__)
 
 
 def pandas_to_file(df, filename):
@@ -53,6 +55,19 @@ def nn_to_pandas(f):
     return df
 
 
+def remove_duplicate_aids(df):
+    """ remove duplicate AIDs from a dataframe while giving preference to active compounds
+        remove compounds that are not active or inactive
+    """
+    log.debug(df)
+    df = df[df.PUBCHEM_ACTIVITY_OUTCOME.str.contains('Inactive|Active')]
+    # sort values by AID than active outcome
+    # to be able to keep the first (which would be an active)
+    df.sort_values(['PUBCHEM_AID', 'PUBCHEM_ACTIVITY_OUTCOME'], inplace=True)
+    df.drop_duplicates(['PUBCHEM_AID'], keep='first', inplace=True)
+    return df
+
+
 def makeBioprofile(df, actives_cutoff=5):
     """ Returns a Pandas DataFrame of CIDS as the index and AIDs as the columns, with bioassays response information as
         values.
@@ -67,32 +82,38 @@ def makeBioprofile(df, actives_cutoff=5):
     db = client.test
     bioassays = db.Bioassays
 
-    docs = pd.DataFrame(list(bioassays.find({"PUBCHEM_CID": {"$in": L}},
+    row = lambda x: pd.DataFrame(list(bioassays.find({"PUBCHEM_CID": x},
                                             {'PUBCHEM_ACTIVITY_OUTCOME': 1, 'PUBCHEM_AID': 1, 'PUBCHEM_CID': 1,
                                              "_id": 0}
                                             )
-                             )
-                        )
+                                    )
+                                 )
+
     client.close()
-    docs.drop_duplicates(['PUBCHEM_AID', 'PUBCHEM_CID'], inplace=True)
-    docs.columns = ['Activity', 'AID', 'CID']
 
-    docs.replace('Inactive', -1, inplace=True)
-    docs.replace('Active', 1, inplace=True)
-    docs.replace('Inconclusive', 0, inplace=True)
-    docs.replace('Unspecified', 0, inplace=True)
 
-    docs = docs.pivot(index='CID', columns='AID', values='Activity')
-    del docs.index.name
-    del docs.columns.name
-    docs.fillna(0)
+    docs = list(map(row, L))
+    docs = list(filter(lambda df: not df.empty, docs))
+    docs = list(map(remove_duplicate_aids, docs))
 
-    sums = pd.Series(docs[docs > 0].sum(), index=docs.columns)
+    df = pd.concat(docs)
+    print(df)
+    df.columns = ['Activity', 'AID', 'CID']
+
+    df.replace('Inactive', -1, inplace=True)
+    df.replace('Active', 1, inplace=True)
+
+    df = df.pivot(index='CID', columns='AID', values='Activity')
+    del df.index.name
+    del df.columns.name
+    df.fillna(0)
+
+    sums = pd.Series(df[df > 0].sum(), index=df.columns)
     m = sums >= actives_cutoff
-    docs = docs.loc[:, m]
+    df = df.loc[:, m]
 
-    docs = docs[(docs.T != 0).any()]
-    return docs.fillna(0)
+    df = df[(df.T != 0).any()]
+    return df.fillna(0)
 
 
 def makeRow(cid, bioassays):
