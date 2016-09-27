@@ -97,7 +97,6 @@ def makeBioprofile(df, actives_cutoff=5):
     docs = list(map(remove_duplicate_aids, docs))
 
     df = pd.concat(docs)
-    print(df)
     df.columns = ['Activity', 'AID', 'CID']
 
     df.replace('Inactive', -1, inplace=True)
@@ -257,10 +256,11 @@ def get_BioSim(train_prof, cids):
     conf_matrix = pd.DataFrame(index=cids.index, columns=train_prof.index).fillna(0)
     
     weight = get_weight(train_prof)
-    
-    for cid in cids.index:
-        test_rsp = makeRow(int(cid), bioassays) # try to get all response information for individual compound
-        if not test_rsp.empty:
+
+    test_prof = makeBioprofile(cids, actives_cutoff=0)
+
+    for cid in test_prof.index:
+        if not any(test_prof.loc[cid] != 0):
             for train_cid in train_prof.index:
                 biosim, conf = calcBioSim2(test_rsp, train_prof.ix[train_cid], weight=weight)
                 biosim_matrix.loc[cid, train_cid] = biosim
@@ -532,8 +532,10 @@ def getIVIC(act, df):
         aid_stats.loc[aid, :] = L
     return aid_stats.sort_index()
 
-from urllib.request import urlopen
-base = "https://pubchem.ncbi.nlm.nih.gov/rest/pug/"
+
+import urllib.parse, urllib.request, urllib.error
+PUBCHEM_BASE = "https://pubchem.ncbi.nlm.nih.gov/rest/pug/"
+
 
 def getSMILESfromCID(CID):
     """ Returns a smiles string
@@ -541,8 +543,8 @@ def getSMILESfromCID(CID):
     CID: a PubChem CID
     """
     try:
-        url = base+"compound/cid/"+CID+"/property/canonicalsmiles/TXT"
-        response = urlopen(url)
+        url = PUBCHEM_BASE+"compound/cid/"+CID+"/property/canonicalsmiles/TXT"
+        response = urllib.request.urlopen(url)
         for line in response:
             SMILES = line.strip().split()
             SMILES = [x.decode('utf-8') for x in SMILES]
@@ -555,8 +557,8 @@ def ifCas(compound):
     compound (str): A Cas registery number or common name identifier
     """
     try:
-        url = base+"compound/name/"+compound+"/cids/TXT"
-        response = urlopen(url)
+        url = PUBCHEM_BASE+"compound/name/"+compound+"/cids/TXT"
+        response = urllib.request.urlopen(url)
         for line in response:
             CIDS = line.strip().split()
             CIDS = [x.decode('utf-8') for x in CIDS]
@@ -564,20 +566,24 @@ def ifCas(compound):
     except:
         return ['N/A']
 
-def ifSmiles(compound):
+def ifSmiles(smiles):
     """ Returns List of CIDS
     
     compound (str): A smiles string
     """
+    log.debug("Processing CID for {0}".format(smiles))
+    url = PUBCHEM_BASE + 'compound/smiles/' + parse.quote(smiles) + '/cids/TXT'
+    log.debug("Url is {0}".format(url))
     try:
-        url = base+"compound/smiles/"+compound+"/cids/TXT"
-        response = urlopen(url)
-        for line in response:
-            CIDS = line.strip().split()
-            CIDS = [x.decode('utf-8') for x in CIDS]
-        return CIDS
-    except:
-        return ['N/A']
+        response = urllib.request.urlopen(url)
+        cids = [int(cid.strip()) for cid in response]
+    except urllib.error.HTTPError as err:
+        cids = ['N/A']
+    except urllib.error.URLError as err:
+        cids = ['N/A']
+    except TimeoutError:
+        cids = ['N/A']
+    return cids
 
 def ifInChIKey(compound):
     """ Returns List of CIDS
@@ -585,8 +591,8 @@ def ifInChIKey(compound):
     compound (str): A InChIKey string
     """
     try:
-        url = base+"compound/inchikey/"+compound+"/cids/TXT"
-        response = urlopen(url)
+        url = PUBCHEM_BASE+"compound/inchikey/"+compound+"/cids/TXT"
+        response = urllib.request.urlopen(url)
         for line in response:
             CIDS = line.strip().split()
             CIDS = [x.decode('utf-8') for x in CIDS]
@@ -1212,7 +1218,6 @@ def sim_graph(target, NNs, nn_cutoff, max_conf):
            line_alpha=0.2,
            line_dash=[6,4]
     )
-    
     f.line(x=[0, 0],
            y=[0, 1],
            line_color='black',

@@ -11,3 +11,4 @@ class TestBioProfile:
         biosim, conf = get_BioSim(profile, test[:10])
         print(biosim)
         assert False
+
