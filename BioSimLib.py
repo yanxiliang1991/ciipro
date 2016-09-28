@@ -30,6 +30,29 @@ def file_to_pandas(f):
     return df
 
 
+def pandas_to_pickle(df, filename):
+    """ Write a file from a Pandas Dataframe.
+
+    df: the Pandas DataFrame to be written.
+    filename: the directory and filename.
+    """
+    df.to_pickle(filename)
+
+
+def pickle_to_pandas(f):
+    """ Reads a file turns a pandas dataframe object
+
+    f: a tab deliminated file with column headers
+    """
+    df = pd.read_pickle(f)
+    print(df)
+    df.index = [cids[0] for cids in df['CIDS']]
+    del df.index.name
+
+    df.index = df.index.astype(int)
+    return df
+
+
 def getExcel(f):
     """Returns a Pandas ExcelWriter object
         
@@ -61,6 +84,9 @@ def remove_duplicate_aids(df):
         remove compounds that are not active or inactive
     """
     log.debug(df)
+    #set all cids to the first cid for indexing purposes
+    # TODO figure out a better way to do this
+    df['PUBCHEM_CID'] = [df.iloc[0, 'PUBCHEM_CID'] for each in df['PUBCHEM_CID']]
     df = df[df.PUBCHEM_ACTIVITY_OUTCOME.str.contains('Inactive|Active')]
     # sort values by AID than active outcome
     # to be able to keep the first (which would be an active)
@@ -76,7 +102,8 @@ def makeBioprofile(df, actives_cutoff=5):
         df: A Pandas dataFrame where index are CIDS
         actives_cutoff (int): default=5, number of actives that must be in each PubChem AID
     """
-    L = [int(x) for x in df.index]  # get the cids
+    cids = [cids for cids in df['CIDS']]  # get the cids
+
 
     client = pymongo.MongoClient(CIIProConfig.DB_SITE, 27017)
     client.test.authenticate(CIIProConfig.DB_USERNAME, CIIProConfig.DB_PASSWORD, mechanism='SCRAM-SHA-1')
@@ -264,7 +291,7 @@ def get_BioSim(train_prof, cids):
         test_cmp = test_prof.loc[cid]
         if not any(test_cmp != 0):
             for train_cid in train_prof.index:
-                biosim, conf = calcBioSim2(test_cmpgit , train_prof.ix[train_cid], weight=weight)
+                biosim, conf = calcBioSim2(test_cmp , train_prof.ix[train_cid], weight=weight)
                 biosim_matrix.loc[cid, train_cid] = biosim
                 conf_matrix.loc[cid, train_cid] = conf
         else:
@@ -384,7 +411,7 @@ def act_series(f):
     
     f: file containing CIDS and Activity information
     """
-    df = file_to_pandas(f)
+    df = pickle_to_pandas(f)
     series = pd.Series(list(df.Activity.astype(int)), index=df.CIDS)
     return series
 
@@ -393,7 +420,7 @@ def act_series_flt(f):
     
     f: file containing CIDS and Activity information
     """
-    df = file_to_pandas(f)
+    df = pickle_to_pandas(f)
     series = pd.Series(list(df.Activity.astype('float')), index=df.CIDS)
     return series
 
@@ -402,7 +429,7 @@ def smi_series(f):
     
     f: file containing CIDS and Activity information
     """
-    df = file_to_pandas(f)
+    df = pickle_to_pandas(f)
     series = pd.Series(list(df.SMILES.astype(str)), index=df.CIDS)
     return series
 
@@ -574,7 +601,7 @@ def ifCas(compound):
             CIDS = [x.decode('utf-8') for x in CIDS]
         return CIDS
     except:
-        return ['N/A']
+        return [None]
 
 def ifSmiles(smiles):
     """ Returns List of CIDS
@@ -588,11 +615,14 @@ def ifSmiles(smiles):
         response = urllib.request.urlopen(url)
         cids = [int(cid.strip()) for cid in response]
     except urllib.error.HTTPError as err:
-        cids = [None]
+        print(err)
+        cids = np.nan
     except urllib.error.URLError as err:
-        cids = [None]
+        print(err)
+        cids = np.nan
     except TimeoutError:
-        cids = [None]
+        print('timeout')
+        cids = np.nan
     return cids
 
 def ifInChIKey(compound):
@@ -608,7 +638,7 @@ def ifInChIKey(compound):
             CIDS = [x.decode('utf-8') for x in CIDS]
         return CIDS
     except:
-        return ['N/A']
+        return [None]
 
 
 def convert(compounds, input_type):
@@ -620,28 +650,23 @@ def convert(compounds, input_type):
     CIDS = []
     if input_type == 'CAS' or input_type == 'name':
         for compound in compounds:
-            try:
-                cid = ifCas(compound)[0]
-                CIDS.append(cid)
-            except:
-                cid = 'N/A'
-                CIDS.append(cid)
+
+            cid = ifCas(compound)
+            CIDS.append(cid)
+
 
     if input_type == 'smiles':
         for compound in compounds:
 
-            cid = ifSmiles(compound)[0]
+            cid = ifSmiles(compound)
             CIDS.append(cid)
 
 
     if input_type == 'inchikey':
         for compound in compounds:
-            try:
-                cid = ifInChIKey(compound)[0]
-                CIDS.append(cid)
-            except:
-                cid = 'N/A'
-                CIDS.append(cid)
+
+            cid = ifInChIKey(compound)
+            CIDS.append(cid)
 
     return CIDS
 
@@ -659,23 +684,26 @@ def convert_file(f, compound_type):
         smiles = [getSMILESfromCID(c)[0] for c in df.CIDS]
         df['SMILES'] = smiles
         df.to_csv(f[:-4] + '_CIIPro.txt', sep='\t', index=False)
+        df.to_pickle(f[:-4])
     else:
         df = pd.read_table(f, dtype=str, header=None, sep='\t')
         df.columns = ['Native', 'Activity']
         duplicate_natives = df.duplicated(['Native'])
         CIDS = convert(list(df.Native), compound_type)
         df['CIDS'] = CIDS
-        duplicate_CIDS = df.duplicated(['CIDS'])
+        df.dropna(subset=['CIDS'], inplace=True)
+        #duplicate_CIDS = df.duplicated(['CIDS'])
 
         # copy compounds with no CIDS to a list
         # no_cids = list(df['Native'][df['CIDS'] == 'N/A'])
-        df.drop_duplicates(subset=['CIDS'], inplace=True)
+        #df.drop_duplicates(subset=['CIDS'], inplace=True)
         # get smiles 
-        smiles = [getSMILESfromCID(c)[0] for c in df.CIDS]
+        smiles = [getSMILESfromCID(c[0]) for c in df.CIDS]
         df['SMILES'] = list(smiles)
         # remove compounds with no CIDS
         df.dropna(subset=['CIDS'], inplace=True)
         df.to_csv(f[:-4] + '_CIIPro.txt', sep='\t', index=False)
+        df.to_pickle(f[:-4])
 
 
 from rdkit.Chem import MACCSkeys

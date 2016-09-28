@@ -148,7 +148,7 @@ def checkRecaptcha(response, secretkey):
     url = url + 'secret=' + secretkey
     url = url + '&response=' + response
     try:
-        jsonobj = json.loads(urlopen(url).read().decode('utf-8'))
+        jsonobj = json.loads(urllib.request.urlopen(url).read().decode('utf-8'))
         if jsonobj['success']:
             return True
         else:
@@ -494,7 +494,7 @@ def CIIProfile():
         if not noOfActives:
             noOfActives = ['5']
 
-        df = file_to_pandas(compound_file_directory)
+        df = pickle_to_pandas(compound_file_directory[:-11])
         session['cur_comp_dir'] = compound_file_directory
 
         profile_filename = USER_FOLDER + '/profiles/' + compound_filename[:-4] + '_BioProfile_{0}.txt'.format(noOfActives[0])
