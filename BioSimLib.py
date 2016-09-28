@@ -3,6 +3,7 @@ import pymongo
 from ciipro_config import CIIProConfig
 import os
 import logging
+import numpy as np
 
 DIR = os.path.dirname(__file__)
 log = logging.getLogger(__name__)
@@ -260,9 +261,10 @@ def get_BioSim(train_prof, cids):
     test_prof = makeBioprofile(cids, actives_cutoff=0)
 
     for cid in test_prof.index:
-        if not any(test_prof.loc[cid] != 0):
+        test_cmp = test_prof.loc[cid]
+        if not any(test_cmp != 0):
             for train_cid in train_prof.index:
-                biosim, conf = calcBioSim2(test_rsp, train_prof.ix[train_cid], weight=weight)
+                biosim, conf = calcBioSim2(test_cmpgit , train_prof.ix[train_cid], weight=weight)
                 biosim_matrix.loc[cid, train_cid] = biosim
                 conf_matrix.loc[cid, train_cid] = conf
         else:
@@ -542,16 +544,24 @@ def getSMILESfromCID(CID):
     
     CID: a PubChem CID
     """
+    log.debug("Processing CID for {0}".format(CID))
+    url = PUBCHEM_BASE + 'compound/smiles/{0}/cids/TXT'.format(CID)
+    log.debug("Url is {0}".format(url))
     try:
-        url = PUBCHEM_BASE+"compound/cid/"+CID+"/property/canonicalsmiles/TXT"
         response = urllib.request.urlopen(url)
-        for line in response:
-            SMILES = line.strip().split()
-            SMILES = [x.decode('utf-8') for x in SMILES]
-        return SMILES
-    except:
-        return ['N/A']
-    
+        smiles = [smiles.strip() for smiles in response]
+    except urllib.error.HTTPError as err:
+        smiles = [None]
+    except urllib.error.URLError as err:
+        smiles = [None]
+    except TimeoutError:
+        smiles = [None]
+    return smiles
+
+
+
+
+
 def ifCas(compound):
     """ Returns List of CIDS
     compound (str): A Cas registery number or common name identifier
@@ -572,17 +582,17 @@ def ifSmiles(smiles):
     compound (str): A smiles string
     """
     log.debug("Processing CID for {0}".format(smiles))
-    url = PUBCHEM_BASE + 'compound/smiles/' + parse.quote(smiles) + '/cids/TXT'
+    url = PUBCHEM_BASE + 'compound/smiles/' + urllib.parse.quote(smiles) + '/cids/TXT'
     log.debug("Url is {0}".format(url))
     try:
         response = urllib.request.urlopen(url)
         cids = [int(cid.strip()) for cid in response]
     except urllib.error.HTTPError as err:
-        cids = ['N/A']
+        cids = [None]
     except urllib.error.URLError as err:
-        cids = ['N/A']
+        cids = [None]
     except TimeoutError:
-        cids = ['N/A']
+        cids = [None]
     return cids
 
 def ifInChIKey(compound):
@@ -619,12 +629,10 @@ def convert(compounds, input_type):
 
     if input_type == 'smiles':
         for compound in compounds:
-            try:
-                cid = ifSmiles(compound)[0]
-                CIDS.append(cid)
-            except:
-                cid = 'N/A'
-                CIDS.append(cid)
+
+            cid = ifSmiles(compound)[0]
+            CIDS.append(cid)
+
 
     if input_type == 'inchikey':
         for compound in compounds:
@@ -660,13 +668,13 @@ def convert_file(f, compound_type):
         duplicate_CIDS = df.duplicated(['CIDS'])
 
         # copy compounds with no CIDS to a list
-        no_cids = list(df['Native'][df['CIDS'] == 'N/A'])
+        # no_cids = list(df['Native'][df['CIDS'] == 'N/A'])
         df.drop_duplicates(subset=['CIDS'], inplace=True)
         # get smiles 
         smiles = [getSMILESfromCID(c)[0] for c in df.CIDS]
         df['SMILES'] = list(smiles)
         # remove compounds with no CIDS
-        df = df[df['CIDS'] != 'N/A']
+        df.dropna(subset=['CIDS'], inplace=True)
         df.to_csv(f[:-4] + '_CIIPro.txt', sep='\t', index=False)
 
 
