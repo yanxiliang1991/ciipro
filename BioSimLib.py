@@ -45,10 +45,9 @@ def pickle_to_pandas(f):
     f: a tab deliminated file with column headers
     """
     df = pd.read_pickle(f)
-    print(df)
     df.index = [cids[0] for cids in df['CIDS']]
     del df.index.name
-
+    df.Activity = df.Activity.astype(int)
     df.index = df.index.astype(int)
     return df
 
@@ -70,7 +69,7 @@ def bioprofile_to_pandas(f):
     del df.index.name 
     df.drop(df.columns[0], axis=1, inplace=True)
     #df.astype(int, copy=False)
-    df = pd.DataFrame(df.values, index=df.index.astype(int), columns=df.columns.astype(int), dtype=int)
+    df = pd.DataFrame(df.values.astype(int), index=df.index.astype(int), columns=df.columns.astype(int), dtype=int)
     return df
 
 
@@ -85,8 +84,9 @@ def remove_duplicate_aids(df):
     """
     log.debug(df)
     #set all cids to the first cid for indexing purposes
-    # TODO figure out a better way to do this
-    df['PUBCHEM_CID'] = [df.iloc[0, 'PUBCHEM_CID'] for each in df['PUBCHEM_CID']]
+    # TODO figure out a better way to do set identifiers
+    first_cid = df.loc[0, 'PUBCHEM_CID'].astype(int)
+    df['PUBCHEM_CID'] = [first_cid for each in df['PUBCHEM_CID']]
     df = df[df.PUBCHEM_ACTIVITY_OUTCOME.str.contains('Inactive|Active')]
     # sort values by AID than active outcome
     # to be able to keep the first (which would be an active)
@@ -110,7 +110,7 @@ def makeBioprofile(df, actives_cutoff=5):
     db = client.test
     bioassays = db.Bioassays
 
-    row = lambda x: pd.DataFrame(list(bioassays.find({"PUBCHEM_CID": x},
+    row = lambda x: pd.DataFrame(list(bioassays.find({"PUBCHEM_CID": {"$in":x}},
                                             {'PUBCHEM_ACTIVITY_OUTCOME': 1, 'PUBCHEM_AID': 1, 'PUBCHEM_CID': 1,
                                              "_id": 0}
                                             )
@@ -120,7 +120,7 @@ def makeBioprofile(df, actives_cutoff=5):
     client.close()
 
 
-    docs = list(map(row, L))
+    docs = list(map(row, cids))
     docs = list(filter(lambda df: not df.empty, docs))
     docs = list(map(remove_duplicate_aids, docs))
 
@@ -284,14 +284,14 @@ def get_BioSim(train_prof, cids):
     conf_matrix = pd.DataFrame(index=cids.index, columns=train_prof.index).fillna(0)
     
     weight = get_weight(train_prof)
-
+    print(weight)
     test_prof = makeBioprofile(cids, actives_cutoff=0)
 
     for cid in test_prof.index:
         test_cmp = test_prof.loc[cid]
-        if not any(test_cmp != 0):
+        if any(test_cmp != 0):
             for train_cid in train_prof.index:
-                biosim, conf = calcBioSim2(test_cmp , train_prof.ix[train_cid], weight=weight)
+                biosim, conf = calcBioSim2(test_cmp, train_prof.loc[train_cid], weight=weight)
                 biosim_matrix.loc[cid, train_cid] = biosim
                 conf_matrix.loc[cid, train_cid] = conf
         else:
@@ -330,7 +330,7 @@ def getbioNN(df, cutoff, conf):
     df = df[m]
     m = df['Confidence'] > conf
     df = df[m]
-    df.sort_values(['Confidence'], axis=0, inplace=True, ascending=False)
+    df.sort_values(['BioSimilarity', 'Confidence'], axis=0, inplace=True, ascending=False)
     df['BioNN'] = df.index
     df.index = range(len(df))
     return df
@@ -364,6 +364,7 @@ def add_BioNN_act(df, act):
     act: Pandas Series containing activity information
     """
     activities = []
+
     for NN in df.BioNN.dropna():
         activities.append(act[NN])
     df2 = pd.DataFrame(activities, index=range(len(activities)), columns=['BioNN_Activity'])
@@ -412,7 +413,7 @@ def act_series(f):
     f: file containing CIDS and Activity information
     """
     df = pickle_to_pandas(f)
-    series = pd.Series(list(df.Activity.astype(int)), index=df.CIDS)
+    series = pd.Series(list(df.Activity.astype(int)), index=df.index)
     return series
 
 def act_series_flt(f):
@@ -421,7 +422,7 @@ def act_series_flt(f):
     f: file containing CIDS and Activity information
     """
     df = pickle_to_pandas(f)
-    series = pd.Series(list(df.Activity.astype('float')), index=df.CIDS)
+    series = pd.Series(list(df.Activity.astype('float')), index=df.index)
     return series
 
 def smi_series(f):
@@ -430,7 +431,7 @@ def smi_series(f):
     f: file containing CIDS and Activity information
     """
     df = pickle_to_pandas(f)
-    series = pd.Series(list(df.SMILES.astype(str)), index=df.CIDS)
+    series = pd.Series(list(df.SMILES.astype(str)), index=df.index)
     return series
 
 def match_CIDS_smiles(df, s):
@@ -519,9 +520,9 @@ def getClasses(act, aid):
     """
     act[act == 0] = -1 # convert all activity responses from zeros to negative ones
     aid_reduce = aid.iloc[aid.nonzero()[0]] 
-    
-    union = (act + aid_reduce).dropna()
-    
+    u = act.index.intersection(aid_reduce.index)
+
+    union = (act[u] + aid_reduce[u])
     TP = union[union > 0].count()
     TN = union[union < 0].count()
     
@@ -572,17 +573,19 @@ def getSMILESfromCID(CID):
     CID: a PubChem CID
     """
     log.debug("Processing CID for {0}".format(CID))
-    url = PUBCHEM_BASE + 'compound/smiles/{0}/cids/TXT'.format(CID)
+    url = PUBCHEM_BASE + 'compound/cid/{0}/property/CanonicalSMILES/TXT'.format(CID)
+    print(url)
     log.debug("Url is {0}".format(url))
     try:
         response = urllib.request.urlopen(url)
-        smiles = [smiles.strip() for smiles in response]
+        smiles = response.readline().strip().decode('utf-8')
     except urllib.error.HTTPError as err:
-        smiles = [None]
+        smiles = np.nan
     except urllib.error.URLError as err:
-        smiles = [None]
+        smiles = np.nan
     except TimeoutError:
-        smiles = [None]
+        smiles = np.nan
+    print(smiles)
     return smiles
 
 

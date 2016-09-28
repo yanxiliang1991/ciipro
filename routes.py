@@ -463,7 +463,10 @@ def removeassays():
 
     new_name = session['cur_prof_dir'].replace('.txt',
                                                '_optimized.txt')
+
     profile.to_csv(new_name, sep='\t')
+    profile.to_csv(new_name.replace('biosims', 'profiles'), sep='\t')
+
     session['cur_prof_dir'] = new_name
     return redirect(url_for('optimizeprofile'))
 
@@ -577,7 +580,7 @@ def CIIPPredict():
             training_filename = profile_filename.split('_BioProfile')[0] + '.txt'
 
             bioprofile = bioprofile_to_pandas(profile_directory)
-            test = file_to_pandas(compound_directory)
+            test = pickle_to_pandas(compound_directory[:-11])
             # if os.path.isfile(USER_BIOSIMS_FOLDER + '/' +
             #                           profile_filename.replace('_BioProfile', '_BioSim_{0}_{1}_{2}'.format(cutoff[0],
             #                                                                                                confidence[0], nns))):
@@ -591,9 +594,9 @@ def CIIPPredict():
             # conf.to_excel(writer, 'Confidence Scores')
             # writer.save()
             # get smiles
-            smi_test = smi_series(compound_directory)
-            smi_train = smi_series(USER_COMPOUNDS_FOLDER + '/' + training_filename)
-        
+            smi_test = smi_series(compound_directory[:-11])
+            smi_train = smi_series(USER_COMPOUNDS_FOLDER + '/' + training_filename[:-11])
+
             # remove compounds no in bioprofile
             s_train = smi_train.loc[smi_train.index.intersection(bioprofile.index)]
         
@@ -601,6 +604,7 @@ def CIIPPredict():
             test_fp = getFPs(smi_test)
             tan = getChemSimilarity(train_fp, test_fp)
             NNs = createNN(biosims, conf, bio_sim=float(cutoff[0]), conf_cutoff=float(confidence[0]))
+            print(NNs)
             for nn in NNs:
                 if not NNs[nn].empty:
                     s = get_chemNN(nn, tan, nns=len(NNs[nn].BioNN))
@@ -611,7 +615,7 @@ def CIIPPredict():
             acts = []
             NN_bool = []
             testsets = [testset for testset in os.listdir(USER_TEST_SET_FOLDER)]
-            train_act = act_series(USER_COMPOUNDS_FOLDER + '/' + training_filename)
+            train_act = act_series(USER_COMPOUNDS_FOLDER + '/' + training_filename[:-11])
             for nn in NNs:
                 if not NNs[nn].empty:
                     NN_bool.append(True)
