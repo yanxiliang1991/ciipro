@@ -306,8 +306,8 @@ def datasets():
     """
     USER_COMPOUNDS_FOLDER = CIIProConfig.UPLOAD_FOLDER + '/' + g.user.username + '/compounds'
     USER_TEST_SETS_FOLDER = CIIProConfig.UPLOAD_FOLDER + '/' + g.user.username + '/test_sets'
-    datasets = [ds for ds in os.listdir(USER_COMPOUNDS_FOLDER)]
-    testsets = [ts for ts in os.listdir(USER_TEST_SETS_FOLDER)]
+    datasets = [ds for ds in os.listdir(USER_COMPOUNDS_FOLDER) if ds[-4:] == '.txt']
+    testsets = [ts for ts in os.listdir(USER_TEST_SETS_FOLDER) if ts[-4:] == '.txt']
 
     username = g.user.username
     return render_template('datasets.html', datasets=datasets, testsets=testsets,
@@ -406,10 +406,8 @@ def CIIProfiler():
     """ Displays CIIProfiler page with all available datasets in users compound folder.
     
     """
-    USER_COMPOUND_FOLDER = CIIProConfig.UPLOAD_FOLDER + '/' + g.user.username + '/compounds'
-    datasets = []
-    for dataset in os.listdir(USER_COMPOUND_FOLDER):
-        datasets.append(dataset)
+    USER_COMPOUNDS_FOLDER = CIIProConfig.UPLOAD_FOLDER + '/' + g.user.username + '/compounds'
+    datasets = [dataset for dataset in os.listdir(USER_COMPOUNDS_FOLDER) if dataset[-4:] == '.txt']
     username = g.user.username
     return render_template('CIIProfiler.html', username=username, datasets=datasets)
 
@@ -424,7 +422,7 @@ def CIIPPredictor():
     USER_PROFILES_FOLDER = CIIProConfig.UPLOAD_FOLDER + '/' + g.user.username + '/profiles'
     USER_TEST_SETS_FOLDER = CIIProConfig.UPLOAD_FOLDER + '/' + g.user.username + '/test_sets'
     profiles = [profile for profile in os.listdir(USER_PROFILES_FOLDER)]
-    testsets = [testset for testset in os.listdir(USER_TEST_SETS_FOLDER)]
+    testsets = [testset for testset in os.listdir(USER_TEST_SETS_FOLDER) if testset[-4:] == '.txt']
     return render_template('CIIPPredictor.html', profiles=profiles, 
                            username=g.user.username, testsets=testsets)	
 
@@ -508,7 +506,7 @@ def CIIProfile():
             profile.to_csv(profile_filename, sep='\t')
             profile.to_csv(profile_filename.replace('profiles', 'biosims'), sep='\t')
 
-        datasets = [dataset for dataset in os.listdir(USER_COMPOUNDS_FOLDER)]
+        datasets = [dataset for dataset in os.listdir(USER_COMPOUNDS_FOLDER) if dataset[-4:] == '.txt']
         stats_df = getIVIC(df['Activity'], profile)
 
         stats_df.to_csv(profile_filename.replace('_BioProfile', '_assay_stats').replace('profiles', 'biosims'), sep='\t')
@@ -771,9 +769,9 @@ def sendbioprofile():
 def sendactcliff():
     return send_file(session['cur_ciff_dir'], as_attachment=True)
 
-@app.route('/trainingsettutorial')
+@app.route('/sendtutorial')
 def trainingsettutorial():
-    return send_file('resources/')
+    return send_file('resources/ER_tutorial.zip')
   
  
 @app.route('/contact')
