@@ -39,5 +39,6 @@ dependencies:
 - nose=1.3.7=py35_1
 - pip:
   - flask-sqlalchemy==2.1
+  - flask-script==2.0.5
 
 

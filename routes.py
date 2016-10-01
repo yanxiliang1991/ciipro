@@ -13,6 +13,7 @@ import json
 from BioSimLib import *
 #import urllib
 import zipfile
+import sqlalchemy.ext
 
 # TODO: go through each module and identifiy and take out passwords, security crucial information
 
@@ -93,8 +94,8 @@ def login():
     if request.method == 'GET':
         return render_template('login.html')
         
-    username = request.form['username']
-    password = request.form['password']
+    username = request.form['username'].strip()
+    password = request.form['password'].strip()
     registered_user = User.query.filter_by(username=username).first()
     
     if registered_user is None:
@@ -117,23 +118,7 @@ def logout():
     """
     
     session.pop('compound_file', None)
-
-    # if the user is a guest, remove uploaded files upon logout
-    if str(g.user.username) == 'Guest':
-        directory = CIIProConfig.UPLOAD_FOLDER + '/' + 'Guest' + '/'
-        folders = ['compounds', 'biosims', 'profiles', 'converter', 'test_sets', 'NNs']
-        for folder in folders:
-            # if the folder is NNs, it may contain several subfolders
-            # which all need to be deleted
-            if folder == 'NNs':
-                for sub_folder in os.listdir(directory+'/'+folder):
-                    import shutil 
-                    shutil.rmtree(directory+'/'+folder+'/'+sub_folder)
-            else:
-                for filename in os.listdir(directory+'/'+folder):
-                    os.remove(directory+'/'+folder+'/'+filename)
-
-    logout_user()    
+    logout_user()
     flash('Logged out successfully')
     return redirect(url_for('home'))
 
@@ -172,26 +157,22 @@ def register():
     """
     if request.method == 'GET':
         return render_template('register.html')
-    
-    user = User(request.form['username'], request.form['password'], request.form['email'])
+
+    try:
+        user = User(request.form['username'], request.form['password'], request.form['email'])
+    except sqlalchemy.exc.IntegrityError as e:
+        flash('Sorry, either user exists with that username or email.', 'danger')
     recaptcha = request.form['g-recaptcha-response']
     if checkRecaptcha(recaptcha, CIIProConfig.SECRET_KEY):
         db.session.add(user)
         db.session.commit()
         directory = CIIProConfig.UPLOAD_FOLDER + '/' + str(user.username)
-        os.makedirs(directory)
-        comp_directory = directory + '/' + "compounds"
-        os.makedirs(comp_directory)
-        biosim_directory = directory + '/' + "biosims"
-        os.makedirs(biosim_directory)
-        profile_directory = directory + '/' + "profiles"
-        os.makedirs(profile_directory)
-        converter_directory = directory + '/' + "converter"
-        os.makedirs(converter_directory)
-        testset_directory = directory + '/' + "test_sets"
-        os.makedirs(testset_directory)
-        NNs_directory = directory + '/' + "NNs"
-        os.makedirs(NNs_directory)   
+        if not os.path.exists(directory):
+            os.makedirs(directory)
+            sub_folders = ["compounds", "biosims", "profiles", "converter", "test_sets", "NNs"]
+            for sf in sub_folders:
+                sub_directory = directory + '/' + sf
+                os.makedirs(sub_directory)
         flash('User successfully registered')
     else:
         flash('Registration failed', 'danger')

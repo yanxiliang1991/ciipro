@@ -3,14 +3,8 @@ from email.mime.multipart import MIMEMultipart
 import smtplib
 import string
 import random
+from ciipro_config import CIIProConfig
 
-
-
-#users = User.query.all()
-#for each in users:
-    #db.session.delete(each)
-    #db.session.commit()
-#    print each.username, each.pw_hash, each.password
 def passwordGenerator(size=6, chars=string.ascii_uppercase + string.digits):
     return ''.join(random.choice(chars) for _ in range(size))
 
@@ -33,9 +27,9 @@ def passwordRetrieval(user_email, User, db):
     db.session.commit()
     msg = MIMEMultipart('alternative')
     msg['Subject'] = "Password Reset from CIIPro"
-    msg['From'] = "ciipro.mail@gmail.com"
-    password = "Rutgers14"
-    username = "ciipro.mail"
+    msg['From'] = "{0}@gmail.com".format(CIIProConfig.CIIPRO_EMAIL)
+    password = CIIProConfig.CIIPRO_EMAIL_PW
+    username = CIIProConfig.CIIPRO_EMAIL
     msg['To'] = str(user_email)
     text = "Your temporary password for CIIPro is %s Please go to www.ciipro-devel.ccib.rutgers.edu/passreset to reset" % str(temp_password)
     html = """\
@@ -43,7 +37,7 @@ def passwordRetrieval(user_email, User, db):
     <head></head>
     <body>
     <p>
-    Your temporary password for CIIPro is %s.  Click <a href='www.ciipro-devel.ccib.rutgers.edu/passreset'>here</a> to reset your password.
+    Your temporary password for CIIPro is %s.  Click <a href='ccib.rutgers.edu/passreset'>here</a> to reset your password.
     </p>
     </body>
     </html>
@@ -59,7 +53,7 @@ def passwordRetrieval(user_email, User, db):
     s.ehlo()
     s.starttls()
     s.login(username, password)
-    s.sendmail("ciipro.mail@gmail.com", str(user_email), msg.as_string())
+    s.sendmail("{0}@gmail.com".format(CIIProConfig.CIIPRO_EMAIL), str(user_email), msg.as_string())
     s.quit()
 
 def usernameRetrieval(user_email, User, db):
@@ -69,9 +63,9 @@ def usernameRetrieval(user_email, User, db):
     ciipro_username = user.username
     msg = MIMEMultipart('alternative')
     msg['Subject'] = "Username Retrieval from CIIPro"
-    msg['From'] = "ciipro.mail@gmail.com"
-    password = "Rutgers14"
-    username = "ciipro.mail"
+    msg['From'] = "{0}@gmail.com".format(CIIProConfig.CIIPRO_EMAIL)
+    password = CIIProConfig.CIIPRO_EMAIL_PW
+    username = CIIProConfig.CIIPRO_EMAIL
     msg['To'] = str(user_email)
     text = "Your username for CIIPro is %s" % str(ciipro_username)
     html = """\
@@ -95,7 +89,7 @@ def usernameRetrieval(user_email, User, db):
     s.ehlo()
     s.starttls()
     s.login(username, password)
-    s.sendmail("ciipro.mail@gmail.com", str(user_email), msg.as_string())
+    s.sendmail("{0}@gmail.com".format(CIIProConfig.CIIPRO_EMAIL), str(user_email), msg.as_string())
     s.quit()
     
     
