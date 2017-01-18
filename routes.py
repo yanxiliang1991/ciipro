@@ -770,4 +770,5 @@ def internalServiceError(e):
 
 
 if __name__ == '__main__': #says if this scripts is run directly, start the application
-	app.run()
+    db.create_all()
+    app.run()
