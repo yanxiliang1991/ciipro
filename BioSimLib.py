@@ -48,7 +48,11 @@ def pickle_to_pandas(f):
     df.index = [cids[0] for cids in df['CIDS']]
     del df.index.name
     df.Activity = df.Activity.astype(int)
-    df.index = df.index.astype(int)
+    # test to see if native index is string or int
+    try:
+        df.index = df.index.astype(int)
+    except TypeError:
+        df.index = df.index
     return df
 
 
@@ -601,7 +605,7 @@ def ifCas(compound):
         response = urllib.request.urlopen(url)
         for line in response:
             CIDS = line.strip().split()
-            CIDS = [x.decode('utf-8') for x in CIDS]
+            CIDS = [int(x.decode('utf-8')) for x in CIDS]
         return CIDS
     except:
         return [None]
