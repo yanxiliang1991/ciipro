@@ -1,0 +1,24 @@
+{% extends "template.html" %}
+{% block content %}
+
+	<div class="jumbo" style="margin-left: 100px; margin-right: 100px;">
+    The Chemical <i>In-vitro</i>, <i>In-vivo</i> Profiling Project (CIIPro) appreciates feedback.
+    Please feel free to send feedback to either <a href="mailto:danrusso@scarletmail.rutgers.edu?Subject=CIIPro">danrusso@scarletmail.rutgers.edu</a>
+    or <a href="mailto:hao.zhu99@rutgers.edu?Subject=CIIPro">hao.zhu99@rutgers.edu</a>.
+    <br>
+    <br>
+          <form action="/submitfeedback" method="post" enctype="multipart/form-data">
+            <div class="form-group">
+              <label for="feedback">Feedback:</label>
+                <textarea type="feedback" name="feedback" class="form-control"
+                          id="feedback" placeholder="Enter Feedback"></textarea>
+            </div>
+            <div class="form-group">
+              <label for="email">Email</label>
+              <input type="email" name="email" class="form-control" id="email" placeholder="Enter email">
+            </div>
+            <button type="submit" class="btn btn-default">Submit</button>
+          </form>
+
+	</div>	
+{% endblock %}		

@@ -6,7 +6,7 @@ from flask_login import login_user, logout_user, current_user, login_required, L
 from werkzeug.utils import secure_filename
 from werkzeug.security import generate_password_hash, check_password_hash
 from flask_sqlalchemy import SQLAlchemy
-from sql import passwordRetrieval, usernameRetrieval, passwordReset
+from sql import passwordRetrieval, usernameRetrieval, passwordReset, send_feedback_email
 from CIIProTools import *
 from ciipro_config import CIIProConfig
 import json
@@ -67,11 +67,19 @@ class User(db.Model):
     def __repr__(self):
         return '<User %r>' % (self.username)
         
+############# flask_login ###################
+#
+# these methods pertain to the flask_login
+# functionality
+#
 
-    
 @login_manager.user_loader
 def load_user(id):
     return User.query.get(int(id))
+
+@app.before_request
+def before_request():
+    g.user = current_user
 
 @app.after_request
 def add_header(response):
@@ -84,75 +92,51 @@ def add_header(response):
     return response
 
 
-@app.route('/') 
-def home():
-    return render_template('home.html')
-
 @app.route('/login', methods=['GET', 'POST'])
 def login():
     if request.method == 'GET':
         return render_template('login.html')
-        
+
     username = request.form['username'].strip()
     password = request.form['password'].strip()
     registered_user = User.query.filter_by(username=username).first()
-    
+
     if registered_user is None:
         flash('Username does not exist', 'danger')
         return redirect(url_for('login'))
-       
+
     if registered_user.check_password(password) == False:
         flash('Password does not match user', 'danger')
         return redirect(url_for(''))
-    
+
     login_user(registered_user)
     flash('Logged in successfully', 'info')
     return redirect(request.args.get('next') or url_for('home'))
+
 
 @app.route('/logout')
 @login_required
 def logout():
     """ Logs out user and returns them to the homepage.
-    
+
     """
-    
+
     session.pop('compound_file', None)
     logout_user()
     flash('Logged out successfully')
     return redirect(url_for('home'))
 
-def checkRecaptcha(response, secretkey):
-    """ Checks the response to the recaptcha entry on the login page. Returns True if response == recaptcha diplayed
-        on the website.
-    
-    response (str): User supplied recaptcha key.
-    secretkey (str): Secret key for the site supplied by Google.
-    """
-    url = 'https://www.google.com/recaptcha/api/siteverify?'      
-    url = url + 'secret=' + secretkey
-    url = url + '&response=' + response
-    try:
-        jsonobj = json.loads(urllib.request.urlopen(url).read().decode('utf-8'))
-        if jsonobj['success']:
-            return True
-        else:
-            return False
-    except Exception as e:
-        print(e)
 
-        return False
-      
-      
-@app.route('/register', methods=['GET', 'POST']) 
+@app.route('/register', methods=['GET', 'POST'])
 def register():
     """ Registers a new user.  checkRecaptcha() must return True to register user.
         Upon successful registration, creates root directory. And four subdirectory folders:
-            
+
             Username
                ├───compounds
                ├───biosims
                ├───profiles
-               └───converter   
+               └───converter
     """
     if request.method == 'GET':
         return render_template('register.html')
@@ -176,6 +160,78 @@ def register():
     else:
         flash('Registration failed', 'danger')
     return redirect(url_for('login'))
+
+
+############# Page Renderers ###################
+#
+# these methods just render static pages on
+# the ciipro site
+
+@app.route('/') 
+def home():
+    return render_template('home.html')
+
+@app.route('/tutorial')
+def tutorial():
+    return render_template('tutorial.html')
+
+@app.route('/sendbiopro')
+def sendbiopro():
+    return render_template('StatsGlossary.html')
+
+@app.route('/sendbiosim')
+def sendbiosim():
+    return send_file('tutorial_samples/BioSim.txt', as_attachment=True)
+
+@app.route('/sendbioconf')
+def sendbiosimconf():
+    return send_file('tutorial_samples/BioSim_Conf.txt', as_attachment=True)
+
+@app.route('/sendbionn')
+def sendbionn():
+    return send_file('tutorial_samples/Bioneighbor.txt', as_attachment=True)
+
+@app.route('/sendactivity')
+def sendactivity():
+    return send_file('tutorial_samples/Activity.txt', as_attachment=True)
+
+@app.route('/sendbiopred')
+def sendbiopred():
+    return send_file('tutorial_samples/BioPred.txt', as_attachment=True)
+
+@app.route('/statsglossary')
+def statsglossary():
+    return render_template('statsglossary.html')
+
+@app.route('/contact')
+def contact():
+    return render_template('contact.html')
+
+@app.route('/feedback')
+def feedback():
+    return render_template('feedback.html')
+
+def checkRecaptcha(response, secretkey):
+    """ Checks the response to the recaptcha entry on the login page. Returns True if response == recaptcha diplayed
+        on the website.
+    
+    response (str): User supplied recaptcha key.
+    secretkey (str): Secret key for the site supplied by Google.
+    """
+    url = 'https://www.google.com/recaptcha/api/siteverify?'      
+    url = url + 'secret=' + secretkey
+    url = url + '&response=' + response
+    try:
+        jsonobj = json.loads(urllib.request.urlopen(url).read().decode('utf-8'))
+        if jsonobj['success']:
+            return True
+        else:
+            return False
+    except Exception as e:
+        print(e)
+
+        return False
+      
 
 @app.route('/passwordrecovery', methods=['GET', 'POST']) 
 def passrecov():
@@ -238,46 +294,7 @@ def passreset():
         return render_template('passreset.html')
    
         
-@app.before_request
-def before_request():
-    g.user = current_user
 
-@app.route('/tutorial')
-def tutorial():
-    return render_template('tutorial.html')
-
-@app.route('/sendbiopro')
-def sendbiopro():
-      return render_template('StatsGlossary.html')
-
-@app.route('/sendbiosim')
-def sendbiosim():
-      return send_file('tutorial_samples/BioSim.txt', as_attachment=True)      
-
-@app.route('/sendbioconf')
-def sendbiosimconf():
-      return send_file('tutorial_samples/BioSim_Conf.txt', as_attachment=True)      
-
-@app.route('/sendbionn')
-def sendbionn():
-      return send_file('tutorial_samples/Bioneighbor.txt', as_attachment=True)
-      
-@app.route('/sendactivity')
-def sendactivity():
-      return send_file('tutorial_samples/Activity.txt', as_attachment=True)
-      
-@app.route('/sendbiopred')
-def sendbiopred():
-      return send_file('tutorial_samples/BioPred.txt', as_attachment=True)
-
-
-@app.route('/statsglossary')
-def statsglossary():
-    """ Displays statsglossary page. 
-    
-    """    
-    return render_template('statsglossary.html')
-    
 @app.route('/datasets', methods=['GET', 'POST'])
 @login_required
 def datasets():
@@ -668,6 +685,18 @@ def CIIProTools():
     return render_template('CIIProTools.html', datasets=datasets, 
                            username=g.user.username)	
 
+
+@app.route('/submitfeedback', methods=['POST'])
+def submitfeedback():
+    import sys
+    email = request.form['email']
+    feedback = request.form['feedback']
+    send_feedback_email(email, feedback)
+    flash('Feedback sent', 'info')
+    return render_template('feedback.html')
+
+
+
 @app.route('/activitycliffs', methods=['GET', 'POST']) 
 @login_required
 def activitycliffs():
@@ -753,10 +782,6 @@ def sendactcliff():
 def trainingsettutorial():
     return send_file('resources/ER_tutorial.zip')
   
- 
-@app.route('/contact')
-def contact():
-      return render_template('contact.html')
 
 
 """
