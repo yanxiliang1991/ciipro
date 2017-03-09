@@ -794,5 +794,23 @@ def internalServiceError(e):
     return render_template('500.html'), 500
 
 
-if __name__ == '__main__': #says if this scripts is run directly, start the application
-    app.run()
+if __name__ == "__main__":
+
+    import argparse
+    parser = argparse.ArgumentParser(description='Runs Web application with options for debugging')
+    parser.add_argument('-d', '--debug', action='store_true',
+                        dest='debug_mode', default=False,
+                        help='run in Werkzeug debug mode')
+    parser.add_argument('-p', '--pydebug', action='store_true',
+                        dest='debug_pycharm', default=False,
+                        help='for use with PyCharm debugger')
+
+    cmd_args = parser.parse_args()
+    app_options = dict()
+
+    app_options["debug"] = cmd_args.debug_mode or cmd_args.debug_pycharm
+    if cmd_args.debug_pycharm:
+        app_options["use_debugger"] = False
+        app_options["use_reloader"] = False
+
+    app.run(**app_options)
