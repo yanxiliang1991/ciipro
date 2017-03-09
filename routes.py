@@ -80,6 +80,8 @@ def load_user(id):
 @app.before_request
 def before_request():
     g.user = current_user
+    #g.datasets = [ds for ds in os.listdir(session['cmp_fldr'])]
+    #g.testsets = [ts for ts in os.listdir(session['tst_fldr'])]
 
 @app.after_request
 def add_header(response):
@@ -110,6 +112,10 @@ def login():
         return redirect(url_for(''))
 
     login_user(registered_user)
+    load_user_session()
+
+    username = g.user.username
+
     flash('Logged in successfully', 'info')
     return redirect(request.args.get('next') or url_for('home'))
 
@@ -301,14 +307,9 @@ def datasets():
     """ Displays datasets page with all available datasets in users compound folder. 
     
     """
-    USER_COMPOUNDS_FOLDER = CIIProConfig.UPLOAD_FOLDER + '/' + g.user.username + '/compounds'
-    USER_TEST_SETS_FOLDER = CIIProConfig.UPLOAD_FOLDER + '/' + g.user.username + '/test_sets'
-    datasets = [ds for ds in os.listdir(USER_COMPOUNDS_FOLDER) if ds[-4:] == '.txt']
-    testsets = [ts for ts in os.listdir(USER_TEST_SETS_FOLDER) if ts[-4:] == '.txt']
 
-    username = g.user.username
-    return render_template('datasets.html', datasets=datasets, testsets=testsets,
-                          username=username)
+    return render_template('datasets.html', datasets=g.datasets, testsets=g.testsets,
+                          username=g.username)
                            
                            
 @app.route('/uploaddataset', methods=['POST', 'GET'])
@@ -679,10 +680,8 @@ def CIIProTools():
         in users' training folder.
     
     """
-
-    USER_COMPOUND_FOLDER = CIIProConfig.UPLOAD_FOLDER + '/' + g.user.username + '/compounds'
-    datasets = [dataset for dataset in os.listdir(USER_COMPOUND_FOLDER)]
-    return render_template('CIIProTools.html', datasets=datasets, 
+    return render_template('CIIProTools.html',
+                           datasets=session['datasets'],
                            username=g.user.username)	
 
 
@@ -782,7 +781,13 @@ def sendactcliff():
 def trainingsettutorial():
     return send_file('resources/ER_tutorial.zip')
   
-
+def load_user_session():
+    session['usr_fldr'] = CIIProConfig.UPLOAD_FOLDER + '/' + g.user.username
+    session['cmp_fldr'] = session['usr_fldr'] + '/compounds'
+    session['tst_fldr'] = session['usr_fldr'] + '/test_sets'
+    session['nn_fldr'] = session['usr_fldr'] + '/NNs'
+    session['datasets'] = [ds for ds in os.listdir(session['cmp_fldr'])]
+    session['testsets'] = [ds for ds in os.listdir(session['tst_fldr'])]
 
 """
     Custom error pages
