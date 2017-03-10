@@ -115,7 +115,7 @@ def login():
     load_user_session()
 
     username = g.user.username
-
+    load_user_session()
     flash('Logged in successfully', 'info')
     return redirect(request.args.get('next') or url_for('home'))
 
@@ -274,9 +274,6 @@ def usernamerecov():
 
 @app.route('/passreset', methods=['GET', 'POST'])
 def passreset():
-    """ Resets a users password.
-    
-    """
     if request.method == 'GET':
         return render_template('passreset.html')
     
@@ -304,34 +301,14 @@ def passreset():
 @app.route('/datasets', methods=['GET', 'POST'])
 @login_required
 def datasets():
-    """ Displays datasets page with all available datasets in users compound folder. 
-    
-    """
-
-    return render_template('datasets.html', datasets=g.datasets, testsets=g.testsets,
+    return render_template('datasets.html', datasets=session['datasets'], testsets=session['testsets'],
                           username=g.username)
                            
                            
 @app.route('/uploaddataset', methods=['POST', 'GET'])
 @login_required
 def uploaddataset():
-    """ Uploads a file from user and saves to users' compounds folder.  Converts non-PubChem CID identifiers to CIDS using 
-        PubChem's PUG Rest.
-        
-        Requests:
-            input_type (str): radio button from page
-            compound_file: user file upload, first column should be compounds, second should be activity.
-            model_type: training or test set upload
-    """
-   
-    USER_COMPOUNDS_FOLDER = CIIProConfig.UPLOAD_FOLDER + '/' + g.user.username + '/compounds'
-    USER_TEST_SETS_FOLDER = CIIProConfig.UPLOAD_FOLDER + '/' + g.user.username + '/test_sets'
-    USER_NN_FOLDER = CIIProConfig.UPLOAD_FOLDER + '/' + g.user.username + '/NNs'
-    
-    username = g.user.username
-    datasets = [ds for ds in os.listdir(USER_COMPOUNDS_FOLDER)]
-    testsets = [ts for ts in os.listdir(USER_TEST_SETS_FOLDER)]
-    
+
     # requests
     input_type = request.form['input_type']
     file = request.files['compound_file']
@@ -340,74 +317,47 @@ def uploaddataset():
     if file and allowed_file(file.filename):
         compound_filename = secure_filename(file.filename)
         if model_type == "training":
-            file_directory_path = USER_COMPOUNDS_FOLDER
+            file_directory_path = session['cmp_fldr']
         else:
-            file_directory_path = USER_TEST_SETS_FOLDER
-            try:
-                os.mkdir(USER_NN_FOLDER + '/' + compound_filename[:-4])
-            except:
-                pass
+            file_directory_path = session['tst_fldr']
+            if not os.path.exists(session['nn_fldr'] + '/' + compound_filename[:-4]):
+                os.mkdir(session['nn_fldr'] + '/' + compound_filename[:-4])
+
+        # reload datasets
+        load_user_session()
             
             
         file.save(os.path.join(file_directory_path, compound_filename))
         convert_file(os.path.join(file_directory_path, compound_filename), input_type)
         os.remove(os.path.join(file_directory_path, compound_filename))        
-        datasets = [ds for ds in os.listdir(USER_COMPOUNDS_FOLDER)]
-        testsets = [ts for ts in os.listdir(USER_TEST_SETS_FOLDER)]
+
         return redirect(url_for('datasets'))  
     else:
         error = "Please attach file"
-        return render_template('datasets.html', datasets=datasets, testsets=testsets, 
-                                username=username, error=error)  
+        return render_template('datasets.html', datasets=session['datasets'],
+                               testsets=session['testsets'], username=g.username, error=error)
      
 
 @app.route('/deletetestset', methods=['POST'])
 @login_required
 def deletetestset():
-    """ Deletes a test set from a users' test sets folder.  
-    
-        Requests:
-            testset_filename (str): radiobutton from datasets page.  
-    """
-    USER_TEST_SETS_FOLDER = CIIProConfig.UPLOAD_FOLDER + '/' + g.user.username + '/test_sets'
-    USER_COMPOUNDS_FOLDER = CIIProConfig.UPLOAD_FOLDER + '/' + g.user.username + '/compounds'
-    username = g.user.username
-    testset_filename = request.form['testset_filename']
-    testset_filename = str(testset_filename)
-    os.remove(USER_TEST_SETS_FOLDER  + '/' + testset_filename)
+    testset_filename = str(request.form['testset_filename'])
+    os.remove(session['tst_fldr'] + '/' + testset_filename)
     return redirect(url_for('datasets'))  
                             
 @app.route('/deletedataset', methods=['POST', 'GET'])
 @login_required
 def deletedataset():
-    """ Deletes a dataset from a users' compounds folder.  
-    
-        Requests:
-            compound_filename (str): radiobutton from datasets page.  
-    """
-    USER_TEST_SETS_FOLDER = CIIProConfig.UPLOAD_FOLDER + '/' + g.user.username + '/test_sets'
-    USER_COMPOUNDS_FOLDER = CIIProConfig.UPLOAD_FOLDER + '/' + g.user.username + '/compounds'
-    username = g.user.username
-    compound_filename = request.form['compound_filename']
-    compound_filename = str(compound_filename)
-    os.remove(USER_COMPOUNDS_FOLDER + '/' + compound_filename)
-    
-    datasets = [ds for ds in os.listdir(USER_COMPOUNDS_FOLDER)]
-    testsets = [ts for ts in os.listdir(USER_TEST_SETS_FOLDER)]
-
-    return render_template('datasets.html', datasets=datasets, testsets=testsets,
-                            username=username)                            
+    compound_filename = str(request.form['compound_filename'])
+    os.remove(session['cmp_fldr'] + '/' + compound_filename)
+    return render_template('datasets.html', datasets=session['datasets'], testsets=session['testsets'],
+                            username=g.user.username)
 
 @app.route('/CIIProfiler') 
 @login_required
 def CIIProfiler():
-    """ Displays CIIProfiler page with all available datasets in users compound folder.
-    
-    """
-    USER_COMPOUNDS_FOLDER = CIIProConfig.UPLOAD_FOLDER + '/' + g.user.username + '/compounds'
-    datasets = [dataset for dataset in os.listdir(USER_COMPOUNDS_FOLDER) if dataset[-4:] == '.txt']
-    username = g.user.username
-    return render_template('CIIProfiler.html', username=username, datasets=datasets)
+    datasets = [dataset for dataset in os.listdir(session['cmp_fldr']) if dataset[-4:] == '.txt']
+    return render_template('CIIProfiler.html', username=g.username, datasets=datasets)
 
 
 @app.route('/CIIPPredictor') 
@@ -642,9 +592,7 @@ def CIIPPredict():
             for nn in NNs:
                 if not NNs[nn].empty:
                     NNs[nn].to_csv(USER_NN_FOLDER + '/' + compound_filename.replace('_CIIPro.txt', '') + '/' + str(nn) + '.csv')
-            #session['sim_data'] = NNs
-            #session['cids'] = cids
-            #session['preds'] = preds
+
             session['nns'] = int(nns)
             session['test_set'] = compound_filename.replace('_CIIPro.txt', '')
             session['cur_biosim_dir'] = USER_BIOSIMS_FOLDER + '/' +  profile_filename.replace('_BioProfile.txt', '')
@@ -658,28 +606,16 @@ def CIIPPredict():
 @app.route('/similarity<cid>', methods=['GET', 'POST'])
 @login_required
 def similarity(cid):
-    USER_FOLDER = CIIProConfig.UPLOAD_FOLDER + '/' + g.user.username
-    USER_TEST_SET_FOLDER = USER_FOLDER +'/test_sets'
-    USER_NN_FOLDER = USER_FOLDER + '/NNs'
-    
-    df = nn_to_pandas(USER_NN_FOLDER + '/' + session['test_set'] + '/' + str(cid) + '.csv')
-    #sim_graph = createSimilarityGraph(int(cid), df,  int(session['nns']))
+
+    df = nn_to_pandas(session['nn_fldr'] + '/' + session['test_set'] + '/' + str(cid) + '.csv')
     sim_graph_pic = sim_graph(int(cid), df, int(session['nns']), int(session['max_conf']))
-    #cids = session['cids']
-    #preds = session['preds']
-    #acts = session['acts']
-    #len_cids = len(cids)
-       
     return render_template('similarity.html', sim_graph=sim_graph_pic)
 
 
 @app.route('/CIIProTools', methods=['GET', 'POST']) 
 @login_required
 def CIIProTools():
-    """ Displays CIIProTools page with all available training sets
-        in users' training folder.
-    
-    """
+
     return render_template('CIIProTools.html',
                            datasets=session['datasets'],
                            username=g.user.username)	
@@ -700,18 +636,13 @@ def submitfeedback():
 @login_required
 def activitycliffs():
     """ Method Identifies Activity Cliffs in training set
-    
-    """
 
-    USER_COMPOUND_FOLDER = CIIProConfig.UPLOAD_FOLDER + '/' + g.user.username + '/compounds'
-    datasets = [dataset for dataset in os.listdir(USER_COMPOUND_FOLDER)]
+    """
     compound_filename = request.form['compound_filename']
     compound_filename = str(compound_filename)
-    compound_directory = USER_COMPOUND_FOLDER + '/' + compound_filename
+    compound_directory = session['cmp_fldr'] + '/' + compound_filename
     
     df = activity_cliffs(compound_directory)
-    #df.to_csv(compound_directory.replace('compounds', NNs), sep='\t')
-    #cliff = cliffTable_bokeh(df)
     df.index.name = 'Target_CID'
         
     writer = pd.ExcelWriter(compound_directory.replace('compounds', 'NNs').replace('.txt', '.xlsx'))
@@ -719,7 +650,7 @@ def activitycliffs():
     writer.save()
     session['cur_ciff_dir'] = compound_directory.replace('compounds', 'NNs').replace('.txt', '.xlsx')
         
-    return render_template('CIIProTools.html', datasets=datasets, 
+    return render_template('CIIProTools.html', datasets=session['datasets'],
                            username=g.user.username, ac=df.to_html())	
 
                                
@@ -742,8 +673,6 @@ def zipPredictionsFiles(biosims_dir):
     os.chdir(dir_)
     z = zipfile.ZipFile(dir_L[-1] + '_biosims.zip', 'w')
     z.write(dir_L[-1] + '_BioSim.txt')
-    #z.write(filename + '_BioPred.txt')
-    #z.write(filename + '_Bioneighbor.txt')
     z.write(dir_L[-1] + '_Conf.txt')
     z.write(dir_L[-1] + '_BioSim_Conf.xlsx')
     z.close()
