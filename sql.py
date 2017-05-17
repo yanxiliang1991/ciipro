@@ -92,4 +92,36 @@ def usernameRetrieval(user_email, User, db):
     s.sendmail("{0}@gmail.com".format(CIIProConfig.CIIPRO_EMAIL), str(user_email), msg.as_string())
     s.quit()
     
-    
+def send_feedback_email(email, feedback):
+
+    msg = MIMEMultipart('alternative')
+    msg['Subject'] = "Feedback from {0}".format(email)
+    msg['From'] = "{0}@gmail.com".format(CIIProConfig.CIIPRO_EMAIL)
+    password = CIIProConfig.CIIPRO_EMAIL_PW
+    username = CIIProConfig.CIIPRO_EMAIL
+    msg['To'] = "{0}@gmail.com".format(CIIProConfig.CIIPRO_EMAIL)
+    text = feedback
+    html = """\
+    <html>
+    <head></head>
+    <body>
+    <p>
+    {0}
+    </p>
+    </body>
+    </html>
+    """.format(feedback)
+
+    m_text1 = MIMEText(text, 'plain')
+    m_text2 = MIMEText(html, 'html')
+
+    msg.attach(m_text1)
+    msg.attach(m_text2)
+
+    s = smtplib.SMTP('smtp.gmail.com:587')
+    s.ehlo()
+    s.starttls()
+    s.login(username, password)
+    s.sendmail("{0}@gmail.com".format(CIIProConfig.CIIPRO_EMAIL),
+               "{0}@gmail.com".format(CIIProConfig.CIIPRO_EMAIL), msg.as_string())
+    s.quit()
