@@ -25,3 +25,13 @@ After installing conda the CIIPro virtual environment can be created using the `
  ```
  conda env create --force
  ```
+
+### NOTES ###
+
+The MongoDB connection can be checked by running the `manager/mongo_manager.py` script
+
+```
+python mongo_manager.py --test
+```
+
+The test will test the connect and print basic database stats.
