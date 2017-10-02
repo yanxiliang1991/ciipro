@@ -123,7 +123,7 @@ def makeBioprofile(df, actives_cutoff=5):
 
     client.close()
 
-
+    print(cids)
     docs = list(map(row, cids))
     docs = list(filter(lambda df: not df.empty, docs))
     docs = list(map(remove_duplicate_aids, docs))
