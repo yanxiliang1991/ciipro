@@ -584,11 +584,11 @@ def getSMILESfromCID(CID):
         response = urllib.request.urlopen(url)
         smiles = response.readline().strip().decode('utf-8')
     except urllib.error.HTTPError as err:
-        smiles = np.nan
+        smiles = [np.nan]
     except urllib.error.URLError as err:
-        smiles = np.nan
+        smiles = [np.nan]
     except TimeoutError:
-        smiles = np.nan
+        smiles = [np.nan]
     print(smiles)
     return smiles
 
