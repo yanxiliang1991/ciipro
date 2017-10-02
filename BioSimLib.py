@@ -125,7 +125,7 @@ def makeBioprofile(df, actives_cutoff=5):
 
 
 
-    df = pd.concat(docs)
+    #df = pd.concat(docs)
     df.columns = ['Activity', 'AID', 'CID']
 
     df.replace('Inactive', -1, inplace=True)
