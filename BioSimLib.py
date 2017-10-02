@@ -114,6 +114,7 @@ def makeBioprofile(df, actives_cutoff=5):
     db = client.test
     bioassays = db.Bioassays
 
+    print(len(cids))
     df = pd.DataFrame(list(bioassays.find({"PUBCHEM_CID": {"$in":cids}},
                                             {'PUBCHEM_ACTIVITY_OUTCOME': 1, 'PUBCHEM_AID': 1, 'PUBCHEM_CID': 1,
                                              "_id": 0}
