@@ -106,7 +106,7 @@ def makeBioprofile(df, actives_cutoff=5):
         df: A Pandas dataFrame where index are CIDS
         actives_cutoff (int): default=5, number of actives that must be in each PubChem AID
     """
-    cids = [cids for cids in df['CIDS']]  # get the cids
+    cids = [cids for cids in df['CIDS'].astype(int)]  # get the cids
 
 
     client = pymongo.MongoClient(CIIProConfig.DB_SITE, 27017)
