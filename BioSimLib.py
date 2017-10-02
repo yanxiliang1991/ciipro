@@ -114,7 +114,7 @@ def makeBioprofile(df, actives_cutoff=5):
     db = client.test
     bioassays = db.Bioassays
 
-    row = lambda x: pd.DataFrame(list(bioassays.find({"PUBCHEM_CID": {"$in":x}},
+    docs = pd.DataFrame(list(bioassays.find({"PUBCHEM_CID": {"$in":cids}},
                                             {'PUBCHEM_ACTIVITY_OUTCOME': 1, 'PUBCHEM_AID': 1, 'PUBCHEM_CID': 1,
                                              "_id": 0}
                                             )
@@ -123,10 +123,7 @@ def makeBioprofile(df, actives_cutoff=5):
 
     client.close()
 
-    print(cids)
-    docs = list(map(row, cids))
-    docs = list(filter(lambda df: not df.empty, docs))
-    docs = list(map(remove_duplicate_aids, docs))
+
 
     df = pd.concat(docs)
     df.columns = ['Activity', 'AID', 'CID']
