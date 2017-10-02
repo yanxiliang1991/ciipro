@@ -124,7 +124,7 @@ def makeBioprofile(df, actives_cutoff=5):
     client.close()
 
 
-
+    print(df.head())
     #df = pd.concat(docs)
     df.columns = ['Activity', 'AID', 'CID']
     #df.drop_duplicates('CID', inplace=True)
