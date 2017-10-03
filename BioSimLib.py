@@ -106,15 +106,15 @@ def makeBioprofile(df, actives_cutoff=5):
         df: A Pandas dataFrame where index are CIDS
         actives_cutoff (int): default=5, number of actives that must be in each PubChem AID
     """
-    cids = [cids for cids in df['CIDS'].astype(int)]  # get the cids
-
+    cids = [cid for cid in df['CIDS'].astype(int)]  # get the cids
+    cids = list(map(int, cids))
 
     client = pymongo.MongoClient(CIIProConfig.DB_SITE, 27017)
     client.test.authenticate(CIIProConfig.DB_USERNAME, CIIProConfig.DB_PASSWORD, mechanism='SCRAM-SHA-1')
     db = client.test
     bioassays = db.Bioassays
 
-    print(len(cids))
+    print(cids)
     df = pd.DataFrame(list(bioassays.find({"PUBCHEM_CID": {"$in":cids}},
                                             {'PUBCHEM_ACTIVITY_OUTCOME': 1, 'PUBCHEM_AID': 1, 'PUBCHEM_CID': 1,
                                              "_id": 0}
