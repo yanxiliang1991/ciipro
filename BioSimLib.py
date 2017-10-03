@@ -125,26 +125,30 @@ def makeBioprofile(df, actives_cutoff=5):
     client.close()
 
 
-    print(df.head())
+
     #df = pd.concat(docs)
     df.columns = ['Activity', 'AID', 'CID']
     #df.drop_duplicates('CID', inplace=True)
-    df.drop_duplicates('AID', inplace=True)
+    df = df.drop_duplicates(subset=['AID', 'CID'])
 
+    df['Activity'] = [val if val in ['Active', 'Inactive'] else 0 for val in df.Activity]
     df.replace('Inactive', -1, inplace=True)
     df.replace('Active', 1, inplace=True)
 
     df = df.pivot(index='CID', columns='AID', values='Activity')
+
     del df.index.name
     del df.columns.name
-    df.fillna(0)
+    df = df.fillna(0)
 
-    sums = pd.Series(df[df > 0].sum(), index=df.columns)
-    m = sums >= actives_cutoff
-    df = df.loc[:, m]
 
-    df = df[(df.T != 0).any()]
-    return df.fillna(0)
+    sums = (df == 1).sum()
+
+    df = df.loc[:, sums >= actives_cutoff]
+
+    df = df[(df != 0).any(1)]
+
+    return df
 
 
 def makeRow(cid, bioassays):
