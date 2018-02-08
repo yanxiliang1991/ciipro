@@ -6,6 +6,8 @@
 ciipro_config.py
 ciipro_app.wsgi
 
+# ignore notes file
+notes.txt
 
 /__pycache__
 
