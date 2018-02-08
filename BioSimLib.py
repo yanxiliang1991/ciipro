@@ -45,7 +45,7 @@ def pickle_to_pandas(f):
     f: a tab deliminated file with column headers
     """
     df = pd.read_pickle(f)
-    df.index = [cids[0] for cids in df['CIDS']]
+    df.index = [cids for cids in df['CIDS']]
     del df.index.name
     df.Activity = df.Activity.astype(int)
     # test to see if native index is string or int
