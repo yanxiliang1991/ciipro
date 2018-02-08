@@ -45,7 +45,7 @@ def pickle_to_pandas(f):
     f: a tab deliminated file with column headers
     """
     df = pd.read_pickle(f)
-    df.index = [cids for cids in df['CIDS']]
+    df.index = [cids[0] for cids in df['CIDS']]
     del df.index.name
     df.Activity = df.Activity.astype(int)
     # test to see if native index is string or int
@@ -106,7 +106,7 @@ def makeBioprofile(df, actives_cutoff=5):
         df: A Pandas dataFrame where index are CIDS
         actives_cutoff (int): default=5, number of actives that must be in each PubChem AID
     """
-    cids = [cid for cid in df['CIDS'].astype(int)]  # get the cids
+    cids = [int(cid[0]) for cid in df['CIDS']]  # get the cids
     cids = list(map(int, cids))
 
     client = pymongo.MongoClient(CIIProConfig.DB_SITE, 27017)
